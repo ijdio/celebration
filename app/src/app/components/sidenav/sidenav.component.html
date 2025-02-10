@@ -9,6 +9,10 @@
   <mat-sidenav-container>
     <mat-sidenav mode="side" [opened]="sidenavOpened">
       <div class="sidenav-content">
+        <button mat-raised-button color="primary" class="create-event-btn" (click)="openCreateEventDialog()">
+          <mat-icon>add</mat-icon>
+          Create Event
+        </button>
         <h3>Sidebar</h3>
         <!-- Add sidebar content here -->
       </div>

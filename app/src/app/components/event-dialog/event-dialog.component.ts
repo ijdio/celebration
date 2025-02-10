@@ -79,23 +79,11 @@ export class EventDialogComponent {
     // Calculate end moment explicitly from start and duration
     const endMoment = startMoment.clone().add(duration, 'minutes');
 
-    console.log('Duration Calculation Debug:', {
-      start: startMoment.toISOString(),
-      calculatedEnd: endMoment.toISOString(),
-      duration: duration,
-      startHour: startHour
-    });
-
     // Determine recurring event details
     const isRecurring = data.event?.is_recurring || data.is_recurring || false;
     const recurringDays = isRecurring 
       ? (data.event?.recurring_days || data.recurring_days || []).map((day: string) => day.toUpperCase())
       : [];
-
-    console.log('Recurring Event Details:', {
-      isRecurring: isRecurring,
-      recurringDays: recurringDays
-    });
 
     this.eventForm = this.fb.group({
       name: [data.event?.name || '', [Validators.required, Validators.minLength(1), Validators.maxLength(100)]],

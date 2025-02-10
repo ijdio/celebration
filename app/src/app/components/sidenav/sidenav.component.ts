@@ -1,10 +1,13 @@
-import { Component, Inject, OnInit, PLATFORM_ID } from '@angular/core';
+import { Component, Inject, OnInit, PLATFORM_ID, ViewChild } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { MatSidenavModule } from '@angular/material/sidenav';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { CalendarComponent } from '../calendar/calendar.component';
+import { EventDialogComponent } from '../event-dialog/event-dialog.component';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import moment from 'moment'; // Use default import
 
 @Component({
   selector: 'app-sidenav',
@@ -15,16 +18,22 @@ import { CalendarComponent } from '../calendar/calendar.component';
     MatIconModule,
     MatButtonModule,
     MatToolbarModule,
+    MatDialogModule,
     CalendarComponent
   ],
   templateUrl: './sidenav.component.html',
   styleUrls: ['./sidenav.component.scss']
 })
 export class SidenavComponent implements OnInit {
+  @ViewChild(CalendarComponent) calendarComponent!: CalendarComponent;
+
   sidenavOpened = true;
   isBrowser = false;
 
-  constructor(@Inject(PLATFORM_ID) private platformId: Object) {}
+  constructor(
+    @Inject(PLATFORM_ID) private platformId: Object,
+    private dialog: MatDialog
+  ) {}
 
   ngOnInit() {
     this.isBrowser = isPlatformBrowser(this.platformId);
@@ -37,10 +46,24 @@ export class SidenavComponent implements OnInit {
       // Dispatch a resize event using requestAnimationFrame
       requestAnimationFrame(() => {
         window.dispatchEvent(new Event('resize'));
-        requestAnimationFrame(() => {
-          window.dispatchEvent(new Event('resize'));
-        });
       });
     }
+  }
+
+  openCreateEventDialog() {
+    // Use moment to set start time to 00:00 of today
+    const now = moment().startOf('day');
+    const defaultStart = now.toDate();
+    const defaultStartHour = 0;  // Set to 00:00
+
+    const dialogData = {
+      start: defaultStart,
+      startHour: defaultStartHour,
+      isEditMode: false,
+      duration: 30  // Default 30-minute duration
+    };
+
+    // Use the calendar component's method to open the event dialog
+    this.calendarComponent.openEventDialog(dialogData);
   }
 }
