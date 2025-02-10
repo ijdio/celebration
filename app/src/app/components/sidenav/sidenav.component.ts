@@ -33,6 +33,14 @@ export class SidenavComponent implements OnInit {
   toggleSidenav() {
     if (this.isBrowser) {
       this.sidenavOpened = !this.sidenavOpened;
+      
+      // Dispatch a resize event using requestAnimationFrame
+      requestAnimationFrame(() => {
+        window.dispatchEvent(new Event('resize'));
+        requestAnimationFrame(() => {
+          window.dispatchEvent(new Event('resize'));
+        });
+      });
     }
   }
 }
