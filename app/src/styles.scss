@@ -1,0 +1,46 @@
+/* You can add global styles to this file, and also import other style files */
+
+@use '@angular/material' as mat;
+
+// Include the common styles for Angular Material
+@include mat.core();
+
+html {
+  color-scheme: light;  // Set to light mode only
+  @include mat.theme((
+    color: (
+      primary: mat.$cyan-palette,
+      theme-type: light,  // Explicitly set light theme
+    ),
+    typography: Roboto,
+    density: 0
+  ));
+}
+
+// Apply theme's surface and text colors
+body {
+  background: var(--mat-sys-color-surface);
+  color: var(--mat-sys-color-on-surface);
+  margin: 0;
+  font-family: var(--mat-sys-typescale-body-large-font);
+}
+
+// Global styles
+.app-container {
+  padding: 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+// Form styles
+.mat-form-field {
+  width: 100%;
+  margin-bottom: 16px;
+}
+
+// Responsive adjustments
+@media (max-width: 600px) {
+  .app-container {
+    padding: 10px;
+  }
+}

@@ -1,0 +1,137 @@
+# Node.js
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Angular
+/app/dist
+/app/tmp
+/app/out-tsc
+/app/bazel-out
+/app/node_modules
+/app/.angular/cache
+.sass-cache/
+/app/connect.lock
+/app/coverage
+/app/libpeerconnection.log
+testem.log
+/app/typings
+dist/
+tmp/
+.angular/
+.cache/
+
+# IDEs and editors
+.idea/
+.project
+.classpath
+.c9/
+*.launch
+.settings/
+*.sublime-workspace
+.vscode/*
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# System Files
+.DS_Store
+Thumbs.db
+
+# Environment variables
+.env
+.venv
+venv/
+ENV/
+.env.local
+.env.development
+.env.production
+
+# Logs and databases
+*.log
+*.sqlite
+*.db
+*.db-journal
+
+# Build output
+build/
+dist/
+out/
+release/
+
+# Dependency directories
+jspm_packages/
+bower_components/
+
+# Testing
+coverage/
+.nyc_output/
+
+# Debug
+debug/
+*.pid
+*.seed
+
+# Misc
+*.bak
+*.tmp
+*.orig
+*.patch
+*.rej
+*.swo
+*.swp
+*.zip
+*.tar.gz
+
+# Editor
+*.sublime-project
+
+# Package Manager specific
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# Angular CLI
+.angular/cache
+
+# Compiled output
+*.js
+*.js.map
+*.d.ts
+
+# TypeScript
+*.tsbuildinfo
+
+# Serverless
+.serverless/
+
+# Firebase
+.firebase/
+
+# Local development
+.local/

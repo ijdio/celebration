@@ -1,0 +1,75 @@
+<h2 mat-dialog-title>{{ data.id ? 'Edit Event' : 'Create Event' }}</h2>
+
+<form [formGroup]="eventForm" (ngSubmit)="onSubmit()">
+  <mat-dialog-content>
+    <!-- Event Name -->
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Event Name</mat-label>
+      <input matInput formControlName="name" placeholder="Enter event name">
+      <mat-error *ngIf="eventForm.get('name')?.errors?.['required']">
+        Name is required
+      </mat-error>
+    </mat-form-field>
+
+    <!-- Start Date -->
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Start Date</mat-label>
+      <input matInput [matDatepicker]="picker" formControlName="startDate">
+      <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+      <mat-datepicker #picker></mat-datepicker>
+      <mat-error *ngIf="eventForm.get('startDate')?.errors?.['required']">
+        Start date is required
+      </mat-error>
+    </mat-form-field>
+
+    <!-- Start Hour -->
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Start Time</mat-label>
+      <mat-select formControlName="startHour">
+        <mat-option *ngFor="let hour of hours" [value]="hour.value">
+          {{ hour.label }}
+        </mat-option>
+      </mat-select>
+      <mat-error *ngIf="eventForm.get('startHour')?.errors?.['required']">
+        Start time is required
+      </mat-error>
+    </mat-form-field>
+
+    <!-- Duration -->
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Duration (minutes)</mat-label>
+      <input matInput type="number" formControlName="duration" min="1" max="1440">
+      <mat-error *ngIf="eventForm.get('duration')?.errors?.['required']">
+        Duration is required
+      </mat-error>
+      <mat-error *ngIf="eventForm.get('duration')?.errors?.['min']">
+        Duration must be at least 1 minute
+      </mat-error>
+      <mat-error *ngIf="eventForm.get('duration')?.errors?.['max']">
+        Duration cannot exceed 24 hours (1440 minutes)
+      </mat-error>
+    </mat-form-field>
+
+    <!-- Recurring Event -->
+    <div class="recurring-section">
+      <mat-checkbox formControlName="is_recurring">Recurring Event</mat-checkbox>
+
+      <!-- Weekdays (shown only when is_recurring is true) -->
+      <div class="weekdays-section" *ngIf="eventForm.get('is_recurring')?.value" formGroupName="weekdays">
+        <div class="weekday-checkboxes">
+          <mat-checkbox *ngFor="let day of weekdays" [formControlName]="day.value">
+            {{ day.label }}
+          </mat-checkbox>
+        </div>
+      </div>
+    </div>
+  </mat-dialog-content>
+
+  <mat-dialog-actions align="end">
+    <button mat-button type="button" (click)="onCancel()">Cancel</button>
+    <button mat-button type="button" color="warn" *ngIf="data.id" (click)="onDelete()">Delete</button>
+    <button mat-raised-button color="primary" type="submit" [disabled]="!eventForm.valid">
+      {{ data.id ? 'Update' : 'Create' }}
+    </button>
+  </mat-dialog-actions>
+</form>

@@ -1,0 +1,11 @@
+{
+  "name": "celebration-poc",
+  "version": "1.0.0",
+  "description": "Celebration Event Scheduler",
+  "scripts": {
+    "reset:db": "cd api && python run_recreate_db.py"
+  },
+  "keywords": ["event", "scheduler", "calendar"],
+  "author": "",
+  "license": "ISC"
+}
