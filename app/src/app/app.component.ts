@@ -1,6 +1,7 @@
 import { Component } from '@angular/core';
 import { RouterModule } from '@angular/router';
 import { MatToolbarModule } from '@angular/material/toolbar';
+import { SidenavComponent } from './components/sidenav/sidenav.component';
 
 @Component({
   selector: 'app-root',
@@ -9,7 +10,8 @@ import { MatToolbarModule } from '@angular/material/toolbar';
   standalone: true,
   imports: [
     RouterModule,
-    MatToolbarModule
+    MatToolbarModule,
+    SidenavComponent
   ]
 })
 export class AppComponent {
