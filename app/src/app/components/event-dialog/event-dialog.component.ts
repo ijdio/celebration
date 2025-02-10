@@ -10,6 +10,7 @@ import { MatNativeDateModule } from '@angular/material/core';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatButtonModule } from '@angular/material/button';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { MatMomentDateModule } from '@angular/material-moment-adapter';
 import moment from 'moment';
 
 @Component({
@@ -27,6 +28,7 @@ import moment from 'moment';
     MatSelectModule,
     MatDatepickerModule,
     MatNativeDateModule,
+    MatMomentDateModule,
     MatCheckboxModule,
     MatButtonModule,
     MatSnackBarModule
@@ -95,7 +97,7 @@ export class EventDialogComponent {
       name: [data.event?.name || '', [Validators.required, Validators.minLength(1), Validators.maxLength(100)]],
       startDate: [startMoment.toDate(), Validators.required],
       startHour: [startHour, Validators.required],
-      duration: [duration, [Validators.required, Validators.min(1), Validators.max(1440)]],
+      duration: [duration || 30, [Validators.required, Validators.min(1)]],
       is_recurring: [data.is_recurring || false],
       weekdays: this.fb.group({
         MO: [false],

@@ -17,6 +17,24 @@ import { ConfirmDialogComponent } from '../confirm-dialog/confirm-dialog.compone
 import { EventService } from '../../services/event.service';
 import { Event } from '../../models/event.model';
 
+// Angular Material Date Imports
+import { MatDatepickerModule } from '@angular/material/datepicker';
+import { DateAdapter, MAT_DATE_FORMATS, MAT_DATE_LOCALE } from '@angular/material/core';
+import { MomentDateAdapter, MAT_MOMENT_DATE_ADAPTER_OPTIONS, MatMomentDateModule } from '@angular/material-moment-adapter';
+
+// Custom date formats using moment
+export const MY_FORMATS = {
+  parse: {
+    dateInput: 'LL',
+  },
+  display: {
+    dateInput: 'LL',
+    monthYearLabel: 'MMM YYYY',
+    dateA11yLabel: 'LL',
+    monthYearA11yLabel: 'MMMM YYYY',
+  },
+};
+
 interface EventCreate {
   name: string;
   start_time: string;
@@ -46,7 +64,19 @@ interface EventDialogData {
     ReactiveFormsModule,
     MatDialogModule,
     MatSnackBarModule,
-    FullCalendarModule
+    FullCalendarModule,
+    MatDatepickerModule,
+    MatMomentDateModule
+  ],
+  providers: [
+    { provide: MAT_DATE_LOCALE, useValue: 'en-US' },
+    {
+      provide: DateAdapter,
+      useClass: MomentDateAdapter,
+      deps: [MAT_DATE_LOCALE, MAT_MOMENT_DATE_ADAPTER_OPTIONS]
+    },
+    { provide: MAT_DATE_FORMATS, useValue: MY_FORMATS },
+    { provide: MAT_MOMENT_DATE_ADAPTER_OPTIONS, useValue: { useUtc: false } }
   ]
 })
 export class CalendarComponent implements OnInit {
