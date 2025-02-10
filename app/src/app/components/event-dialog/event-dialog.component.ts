@@ -1,6 +1,6 @@
 import { Component, Inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators, AbstractControl } from '@angular/forms';
 import { MAT_DIALOG_DATA, MatDialogRef, MatDialogModule } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
@@ -41,16 +41,6 @@ export class EventDialogComponent {
     label: i.toString().padStart(2, '0') + ':00'
   }));
 
-  weekdays = [
-    { value: 'MO', label: 'Monday' },
-    { value: 'TU', label: 'Tuesday' },
-    { value: 'WE', label: 'Wednesday' },
-    { value: 'TH', label: 'Thursday' },
-    { value: 'FR', label: 'Friday' },
-    { value: 'SA', label: 'Saturday' },
-    { value: 'SU', label: 'Sunday' }
-  ];
-
   constructor(
     private fb: FormBuilder,
     public dialogRef: MatDialogRef<EventDialogComponent>,
@@ -75,7 +65,9 @@ export class EventDialogComponent {
       startType: typeof data.start,
       endType: typeof data.end,
       startValue: data.start ? moment(data.start).toISOString() : null,
-      endValue: data.end ? moment(data.end).toISOString() : null
+      endValue: data.end ? moment(data.end).toISOString() : null,
+      event: data.event,
+      isEditMode: data.isEditMode
     });
 
     // Create moment instances
@@ -93,54 +85,39 @@ export class EventDialogComponent {
       duration: duration
     });
 
+    // Determine recurring event details
+    const isRecurring = data.event?.is_recurring || data.is_recurring || false;
+    const recurringDays = isRecurring 
+      ? (data.event?.recurring_days || data.recurring_days || []).map((day: string) => day.toUpperCase())
+      : [];
+
+    console.log('Recurring Event Details:', {
+      isRecurring: isRecurring,
+      recurringDays: recurringDays
+    });
+
     this.eventForm = this.fb.group({
       name: [data.event?.name || '', [Validators.required, Validators.minLength(1), Validators.maxLength(100)]],
       startDate: [startMoment.toDate(), Validators.required],
       startHour: [startHour, Validators.required],
       duration: [duration || 30, [Validators.required, Validators.min(1)]],
-      is_recurring: [data.is_recurring || false],
-      weekdays: this.fb.group({
-        MO: [false],
-        TU: [false],
-        WE: [false],
-        TH: [false],
-        FR: [false],
-        SA: [false],
-        SU: [false]
-      }, { validators: this.recurringDaysValidator })
+      is_recurring: [isRecurring],
+      recurring_days: [recurringDays]
     });
 
-    // Set initial weekdays if editing an existing recurring event
-    if (data.recurring_days) {
-      const weekdaysGroup = this.eventForm.get('weekdays') as FormGroup;
-      data.recurring_days.forEach((day: string) => {
-        const uppercaseDay = day.toUpperCase();
-        if (weekdaysGroup.contains(uppercaseDay)) {
-          weekdaysGroup.get(uppercaseDay)?.setValue(true);
-        }
-      });
-    }
-
-    // Watch is_recurring changes to handle weekdays validation
+    // Watch is_recurring changes to handle recurring days validation
     this.eventForm.get('is_recurring')?.valueChanges.subscribe((is_recurring: boolean) => {
-      const weekdaysGroup = this.eventForm.get('weekdays') as FormGroup;
-      weekdaysGroup.updateValueAndValidity();
+      const recurringDaysControl = this.eventForm.get('recurring_days');
+      if (is_recurring) {
+        recurringDaysControl?.setValidators([Validators.required]);
+      } else {
+        recurringDaysControl?.clearValidators();
+      }
+      recurringDaysControl?.updateValueAndValidity();
     });
-  }
 
-  // Custom validator for recurring days
-  recurringDaysValidator(group: FormGroup): {[key: string]: any} | null {
-    const isRecurring = group.parent?.get('is_recurring')?.value;
-    
-    if (isRecurring) {
-      const selectedDays = Object.entries(group.value)
-        .filter(([_, checked]) => checked)
-        .map(([day]) => day);
-      
-      return selectedDays.length > 0 ? null : { 'noDaysSelected': true };
-    }
-    
-    return null;
+    // Trigger initial validation for recurring days
+    this.eventForm.get('is_recurring')?.updateValueAndValidity();
   }
 
   onSubmit() {
@@ -177,9 +154,7 @@ export class EventDialogComponent {
       end: endMoment.toDate(),
       is_recurring: formValue.is_recurring,
       recurring_days: formValue.is_recurring ? 
-        Object.entries(formValue.weekdays)
-          .filter(([_, checked]) => checked)
-          .map(([day]) => day) : 
+        formValue.recurring_days : 
         undefined
     };
 

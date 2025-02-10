@@ -59,12 +59,22 @@
       <mat-checkbox formControlName="is_recurring">Recurring Event</mat-checkbox>
 
       <!-- Weekdays (shown only when is_recurring is true) -->
-      <div class="weekdays-section" *ngIf="eventForm.get('is_recurring')?.value" formGroupName="weekdays">
-        <div class="weekday-checkboxes">
-          <mat-checkbox *ngFor="let day of weekdays" [formControlName]="day.value">
-            {{ day.label }}
-          </mat-checkbox>
-        </div>
+      <div class="weekdays-section" *ngIf="eventForm.get('is_recurring')?.value">
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Recurring Days</mat-label>
+          <mat-select formControlName="recurring_days" multiple>
+            <mat-option value="MO">Monday</mat-option>
+            <mat-option value="TU">Tuesday</mat-option>
+            <mat-option value="WE">Wednesday</mat-option>
+            <mat-option value="TH">Thursday</mat-option>
+            <mat-option value="FR">Friday</mat-option>
+            <mat-option value="SA">Saturday</mat-option>
+            <mat-option value="SU">Sunday</mat-option>
+          </mat-select>
+          <mat-error *ngIf="eventForm.get('recurring_days')?.hasError('required')">
+            Please select at least one day
+          </mat-error>
+        </mat-form-field>
       </div>
     </div>
   </mat-dialog-content>

@@ -212,7 +212,6 @@ export class CalendarComponent implements OnInit {
           timestamp: moment().toISOString()
         });
       }
-      console.log("HERE", calendarEvent)
       return calendarEvent;
     });
   }
@@ -247,6 +246,10 @@ export class CalendarComponent implements OnInit {
     const endMoment = clickInfo.event.end ? moment(clickInfo.event.end) : startMoment.clone().add(30, 'minutes');
     const duration = endMoment.diff(startMoment, 'minutes');
 
+    // Extract recurring event details from extendedProps
+    const isRecurring = clickInfo.event.extendedProps['isRecurring'] || false;
+    const recurringDays = clickInfo.event.extendedProps['recurringDays'] || [];
+
     console.log('Calendar Event Click', {
       event: {
         id: clickInfo.event.id,
@@ -254,8 +257,11 @@ export class CalendarComponent implements OnInit {
         start: startMoment.toISOString(),
         end: endMoment.toISOString(),
         duration: duration,
-        allDay: clickInfo.event.allDay
+        allDay: clickInfo.event.allDay,
+        isRecurring: isRecurring,
+        recurringDays: recurringDays
       },
+      extendedProps: clickInfo.event.extendedProps,
       timestamp: moment().toISOString()
     });
 
@@ -266,11 +272,13 @@ export class CalendarComponent implements OnInit {
         name: clickInfo.event.title || '',
         start_time: startMoment.toISOString(),
         duration: duration,
-        is_recurring: clickInfo.event.extendedProps['is_recurring'] || false,
-        recurring_days: clickInfo.event.extendedProps['recurring_days']
+        is_recurring: isRecurring,
+        recurring_days: recurringDays
       },
       start: startMoment.toDate(),
       end: endMoment.toDate(),
+      is_recurring: isRecurring,
+      recurring_days: recurringDays,
       isEditMode: true
     };
 
