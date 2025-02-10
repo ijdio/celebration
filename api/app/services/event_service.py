@@ -105,33 +105,91 @@ class EventService:
         return self.db.query(Event).filter(Event.id == event_id).first()
 
     def update_event(self, event_id: int, event_update: EventCreate) -> Event:
-        db_event = self.get_event_by_id(event_id)
-        if not db_event:
-            raise HTTPException(
-                status_code=404,
-                detail="Event not found"
-            )
+        try:
+            # Log raw input data
+            logger.info(f"Update Event Request - ID: {event_id}")
+            logger.info(f"Raw Event Update Data: {event_update}")
+            
+            # Validate input data types
+            logger.debug(f"Input Data Types:")
+            logger.debug(f"event_id: {type(event_id)}, value: {event_id}")
+            logger.debug(f"name: {type(event_update.name)}, value: {event_update.name}")
+            logger.debug(f"start_time: {type(event_update.start_time)}, value: {event_update.start_time}")
+            logger.debug(f"duration: {type(event_update.duration)}, value: {event_update.duration}")
+            logger.debug(f"is_recurring: {type(event_update.is_recurring)}, value: {event_update.is_recurring}")
+            logger.debug(f"recurring_days: {type(event_update.recurring_days)}, value: {event_update.recurring_days}")
+            
+            # Retrieve existing event
+            db_event = self.get_event_by_id(event_id)
+            if not db_event:
+                logger.error(f"Event with ID {event_id} not found")
+                raise HTTPException(
+                    status_code=404,
+                    detail="Event not found"
+                )
+            
+            # Log existing event details for comparison
+            logger.debug(f"Existing Event Details: {db_event}")
+            
+            # Check for conflicts excluding the current event
+            conflict_details = self._get_conflict_details(event_update, exclude_id=event_id)
+            if conflict_details:
+                logger.warning(f"Event update blocked due to conflicts: {conflict_details}")
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"Invalid event details: {conflict_details}"
+                )
+            
+            # Convert event_update to dictionary for more robust updating
+            update_dict = event_update.model_dump()
+            
+            # Explicitly handle recurring_days
+            if 'recurring_days' in update_dict and update_dict['recurring_days']:
+                # Ensure days are uppercase and sorted
+                update_dict['recurring_days'] = ','.join(
+                    sorted(str(day).upper() for day in update_dict['recurring_days'])
+                )
+            
+            # Update event attributes
+            for key, value in update_dict.items():
+                try:
+                    # Log each attribute update
+                    logger.debug(f"Updating attribute {key}: {value}")
+                    setattr(db_event, key, value)
+                except Exception as attr_error:
+                    logger.error(f"Error setting attribute {key}: {attr_error}")
+                    raise HTTPException(
+                        status_code=500,
+                        detail=f"Error updating event attribute {key}: {str(attr_error)}"
+                    )
+            
+            # Commit and refresh
+            try:
+                self.db.commit()
+                self.db.refresh(db_event)
+                
+                # Log successful update
+                logger.info(f"Event updated successfully: {db_event}")
+                logger.debug(f"Updated Event Details: {db_event.__dict__}")
+            except Exception as commit_error:
+                self.db.rollback()
+                logger.error(f"Database commit error: {commit_error}")
+                raise HTTPException(
+                    status_code=500,
+                    detail=f"Database error during event update: {str(commit_error)}"
+                )
+            
+            return db_event
         
-        # Log detailed event update attempt
-        logger.debug(f"Attempting to update event: {event_update}")
-        
-        # Check for conflicts excluding the current event
-        conflict_details = self._get_conflict_details(event_update, exclude_id=event_id)
-        if conflict_details:
-            logger.warning(f"Event update blocked due to conflicts: {conflict_details}")
-            raise HTTPException(
-                status_code=400,
-                detail=f"Invalid event details: {conflict_details}"
-            )
-        
-        for key, value in event_update.model_dump().items():
-            setattr(db_event, key, value)
-        
-        self.db.commit()
-        self.db.refresh(db_event)
-        
-        logger.info(f"Event updated successfully: {db_event}")
-        return db_event
+        except Exception as e:
+            # Catch-all error logging with full traceback
+            logger.error(f"Unexpected error updating event: {str(e)}", exc_info=True)
+            if not isinstance(e, HTTPException):
+                raise HTTPException(
+                    status_code=500,
+                    detail=f"Unexpected error updating event: {str(e)}"
+                )
+            raise
 
     def delete_event(self, event_id: int) -> bool:
         db_event = self.get_event_by_id(event_id)

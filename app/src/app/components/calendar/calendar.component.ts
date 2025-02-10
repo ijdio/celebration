@@ -78,7 +78,13 @@ export class CalendarComponent implements OnInit {
       dayMaxEvents: true,
       select: this.handleDateSelect.bind(this),
       eventClick: this.handleEventClick.bind(this),
-      eventsSet: this.handleEvents.bind(this)
+      eventsSet: this.handleEvents.bind(this),
+      businessHours: {
+        daysOfWeek: [1, 2, 3, 4, 5], // Monday to Friday
+        startTime: '09:00', // 9:00 AM
+        endTime: '17:00'    // 5:00 PM
+      },
+      allDaySlot: false, // Remove all-day slot
     };
   }
 
@@ -89,7 +95,7 @@ export class CalendarComponent implements OnInit {
   loadEvents(): void {
     this.eventService.getEvents().subscribe({
       next: (eventList: { events: Event[] }) => {
-        console.log('Events Loaded Successfully', {
+        console.log('Calendar Loaded Events Successfully', {
           totalEvents: eventList.events.length,
           events: eventList.events.map((event: Event) => ({
             id: event.id,
@@ -108,7 +114,7 @@ export class CalendarComponent implements OnInit {
         this.calendarOptions.events = calendarEvents;
       },
       error: (error: Error) => {
-        console.error('Failed to Load Events', {
+        console.error('Calendar Failed to Load Events', {
           error: error,
           timestamp: new Date().toISOString()
         });
@@ -120,6 +126,7 @@ export class CalendarComponent implements OnInit {
   mapToCalendarEvents(events: Event[]): EventInput[] {
     console.log('Mapping Events to Calendar Format', {
       totalEvents: events.length,
+      events: events,
       timestamp: new Date().toISOString()
     });
 
@@ -156,56 +163,112 @@ export class CalendarComponent implements OnInit {
           'SU': 'SU'  // Sunday
         };
 
+        // Parse start moment and calculate one year later
+        const startMoment = moment(start);
+        const oneYearLater = startMoment.clone().add(1, 'year');
+
         calendarEvent.rrule = {
           freq: 'weekly',
-          byweekday: event.recurring_days.map(day => dayMapping[day])
+          byweekday: event.recurring_days.map(day => dayMapping[day]),
+          dtstart: startMoment.toISOString(),
+          until: oneYearLater.toISOString()
         };
 
         console.log('Recurring Event Mapped', {
-          eventId: event.id,
+          event: event,
+          startDate: startMoment.toISOString(),
+          endDate: oneYearLater.toISOString(),
           recurringDays: event.recurring_days,
-          timestamp: new Date().toISOString()
+          timestamp: moment().toISOString()
         });
       }
-
+      console.log("HERE", calendarEvent)
       return calendarEvent;
     });
   }
 
   handleDateSelect(selectInfo: DateSelectArg): void {
+    // Use moment for all date manipulations
+    const startDate = moment(selectInfo.start);
+    const endDate = selectInfo.end 
+      ? moment(selectInfo.end)
+      : startDate.clone().add(30, 'minutes');
+
+    // Log date selection details with moment
+    console.log('Date Select Details:', {
+      startDate: startDate.toISOString(),
+      endDate: endDate.toISOString(),
+      startType: typeof startDate,
+      endType: typeof endDate
+    });
+
     const dialogData: EventDialogData = {
-      start: selectInfo.start,
-      end: selectInfo.end
+      start: startDate.toDate(),
+      end: endDate.toDate(),
+      isEditMode: false
     };
 
     this.openEventDialog(dialogData);
   }
 
   handleEventClick(clickInfo: EventClickArg): void {
-    const event = clickInfo.event;
-    const originalEvent = event.extendedProps['originalEvent'] as Event;
-    
-    const dialogData: EventDialogData = {
-      id: event.id as string | number,
-      event: originalEvent,
-      isEditMode: true,
-      start: event.start ?? null,
-      end: event.end ?? null,
-      is_recurring: originalEvent.is_recurring || false,
-      recurring_days: originalEvent.is_recurring ? 
-        (originalEvent.recurring_days || []) : 
-        undefined
-    };
+    // Calculate duration in minutes
+    const startMoment = moment(clickInfo.event.start);
+    const endMoment = clickInfo.event.end ? moment(clickInfo.event.end) : startMoment.clone().add(30, 'minutes');
+    const duration = endMoment.diff(startMoment, 'minutes');
 
-    console.log('Event Click Dialog Data:', dialogData);
+    console.log('Calendar Event Click', {
+      event: {
+        id: clickInfo.event.id,
+        title: clickInfo.event.title,
+        start: startMoment.toISOString(),
+        end: endMoment.toISOString(),
+        duration: duration,
+        allDay: clickInfo.event.allDay
+      },
+      timestamp: moment().toISOString()
+    });
+
+    const dialogData: EventDialogData = {
+      id: clickInfo.event.id,
+      event: {
+        id: clickInfo.event.id,
+        name: clickInfo.event.title || '',
+        start_time: startMoment.toISOString(),
+        duration: duration,
+        is_recurring: clickInfo.event.extendedProps['is_recurring'] || false,
+        recurring_days: clickInfo.event.extendedProps['recurring_days']
+      },
+      start: startMoment.toDate(),
+      end: endMoment.toDate(),
+      isEditMode: true
+    };
 
     this.openEventDialog(dialogData);
   }
 
   openEventDialog(dialogData?: EventDialogData): void {
-    const dialogConfig = new MatDialogConfig();
-    dialogConfig.width = '500px';
-    dialogConfig.data = dialogData || {};
+    // Ensure dates are normalized with moment
+    const safeDialogData = dialogData ? {
+      ...dialogData,
+      start: dialogData.start ? moment(dialogData.start).toDate() : undefined,
+      end: dialogData.end ? moment(dialogData.end).toDate() : undefined
+    } : undefined;
+
+    console.log('Open Event Dialog Input:', {
+      dialogData: safeDialogData 
+        ? JSON.parse(JSON.stringify({
+            ...safeDialogData,
+            start: moment(safeDialogData.start).toISOString(),
+            end: moment(safeDialogData.end).toISOString()
+          }))
+        : null
+    });
+
+    const dialogConfig: MatDialogConfig = {
+      width: '400px',
+      data: safeDialogData
+    };
 
     const dialogRef = this.dialog.open(EventDialogComponent, dialogConfig);
 
@@ -214,11 +277,15 @@ export class CalendarComponent implements OnInit {
 
       // Check if result is valid and has the expected structure
       if (result && result.action === 'save') {
+        // Use moment for all date normalizations
+        const startMoment = moment(result.start);
+        const endMoment = moment(result.end);
+
         // Prepare event data to match backend schema
         const eventCreate: EventCreate = {
           name: result.name,
-          start_time: moment(result.start).utc().format('YYYY-MM-DDTHH:mm:ss[Z]'),
-          duration: moment(result.end).diff(moment(result.start), 'minutes'),
+          start_time: startMoment.toISOString(),
+          duration: endMoment.diff(startMoment, 'minutes'),
           is_recurring: result.is_recurring || false,
           recurring_days: result.is_recurring && result.recurring_days 
             ? result.recurring_days.map((day: string) => day.toUpperCase()) 
@@ -226,7 +293,10 @@ export class CalendarComponent implements OnInit {
         };
 
         // Log the event data being sent
-        console.log('Preparing to send event data:', eventCreate);
+        console.log('Preparing to send event data:', {
+          ...eventCreate,
+          start_time: eventCreate.start_time
+        });
 
         // Determine if this is a new event or an update
         if (dialogData && dialogData.id) {

@@ -36,16 +36,21 @@
     </mat-form-field>
 
     <!-- Duration -->
-    <mat-form-field appearance="outline" class="full-width">
+    <mat-form-field>
       <mat-label>Duration (minutes)</mat-label>
-      <input matInput type="number" formControlName="duration" min="1" max="1440">
-      <mat-error *ngIf="eventForm.get('duration')?.errors?.['required']">
+      <input matInput type="number" 
+             formControlName="duration" 
+             placeholder="Default: 30 minutes"
+             min="1" 
+             max="1440">
+      <mat-hint>Enter event duration in minutes (1-1440)</mat-hint>
+      <mat-error *ngIf="eventForm.get('duration')?.hasError('required')">
         Duration is required
       </mat-error>
-      <mat-error *ngIf="eventForm.get('duration')?.errors?.['min']">
+      <mat-error *ngIf="eventForm.get('duration')?.hasError('min')">
         Duration must be at least 1 minute
       </mat-error>
-      <mat-error *ngIf="eventForm.get('duration')?.errors?.['max']">
+      <mat-error *ngIf="eventForm.get('duration')?.hasError('max')">
         Duration cannot exceed 24 hours (1440 minutes)
       </mat-error>
     </mat-form-field>

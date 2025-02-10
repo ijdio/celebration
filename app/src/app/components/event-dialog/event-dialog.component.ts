@@ -55,18 +55,45 @@ export class EventDialogComponent {
     @Inject(MAT_DIALOG_DATA) public data: any,
     private snackBar: MatSnackBar
   ) {
-    console.log('Event Dialog Constructor Data:', data);
+    // Use moment for all date normalizations
+    const normalizeDate = (date: Date | string | null): moment.Moment => {
+      if (!date) {
+        throw new Error('No date provided for event');
+      }
+      const momentDate = moment(date);
+      if (!momentDate.isValid()) {
+        throw new Error('Invalid date provided for event');
+      }
+      return momentDate;
+    };
 
-    const startDate = data.start ? moment(data.start).toDate() : new Date();
-    const startHour = data.start ? moment(data.start).hours() : moment().hours();
-    
+    // Detailed logging of input data with moment
+    console.log('Event Dialog Constructor Raw Data:', {
+      data: JSON.parse(JSON.stringify(data)),
+      startType: typeof data.start,
+      endType: typeof data.end,
+      startValue: data.start ? moment(data.start).toISOString() : null,
+      endValue: data.end ? moment(data.end).toISOString() : null
+    });
+
+    // Create moment instances
+    const startMoment = normalizeDate(data.start);
+    const startHour = startMoment.hours();
+
+    // Calculate duration using moment
     const duration = data.start && data.end 
-      ? moment(data.end).diff(moment(data.start), 'minutes') 
-      : 30;
+      ? moment(normalizeDate(data.end)).diff(startMoment, 'minutes') 
+      : 30;  // Explicitly set default to 30 minutes
+
+    console.log('Constructor Date Calculations:', {
+      startDate: startMoment.toISOString(),
+      startHour: startHour,
+      duration: duration
+    });
 
     this.eventForm = this.fb.group({
       name: [data.event?.name || '', [Validators.required, Validators.minLength(1), Validators.maxLength(100)]],
-      startDate: [startDate, Validators.required],
+      startDate: [startMoment.toDate(), Validators.required],
       startHour: [startHour, Validators.required],
       duration: [duration, [Validators.required, Validators.min(1), Validators.max(1440)]],
       is_recurring: [data.is_recurring || false],
@@ -115,83 +142,55 @@ export class EventDialogComponent {
   }
 
   onSubmit() {
-    // Mark all form controls as touched to trigger validation
-    this.eventForm.markAllAsTouched();
+    // Validate form before processing
+    if (this.eventForm.invalid) {
+      this.snackBar.open('Please fill out all required fields correctly', 'Close', { duration: 3000 });
+      return;
+    }
 
-    // Detailed validation logging
-    console.log('Form Validation Status:', {
-      isValid: this.eventForm.valid,
-      name: {
-        value: this.eventForm.get('name')?.value,
-        errors: this.eventForm.get('name')?.errors
-      },
-      startDate: {
-        value: this.eventForm.get('startDate')?.value,
-        errors: this.eventForm.get('startDate')?.errors
-      },
-      startHour: {
-        value: this.eventForm.get('startHour')?.value,
-        errors: this.eventForm.get('startHour')?.errors
-      },
-      duration: {
-        value: this.eventForm.get('duration')?.value,
-        errors: this.eventForm.get('duration')?.errors
-      },
-      isRecurring: {
-        value: this.eventForm.get('is_recurring')?.value,
-        weekdays: this.eventForm.get('weekdays')?.value,
-        weekdaysErrors: this.eventForm.get('weekdays')?.errors
-      }
+    // Normalize dates using moment
+    const formValue = this.eventForm.value;
+
+    // Explicitly validate start date
+    const startMoment = moment(formValue.startDate);
+    if (!startMoment.isValid()) {
+      this.snackBar.open('Invalid start date', 'Close', { duration: 3000 });
+      return;
+    }
+
+    // Set precise time components
+    startMoment
+      .hours(formValue.startHour)
+      .minutes(0)
+      .seconds(0)
+      .milliseconds(0);
+
+    // Calculate end moment based on duration
+    const endMoment = startMoment.clone().add(formValue.duration, 'minutes');
+
+    const result = {
+      action: 'save',
+      name: formValue.name,
+      start: startMoment.toDate(),
+      end: endMoment.toDate(),
+      is_recurring: formValue.is_recurring,
+      recurring_days: formValue.is_recurring ? 
+        Object.entries(formValue.weekdays)
+          .filter(([_, checked]) => checked)
+          .map(([day]) => day) : 
+        undefined
+    };
+
+    // Log final event creation details with moment
+    console.log('Event Creation Details:', {
+      name: result.name,
+      start: moment(result.start).toISOString(),
+      end: moment(result.end).toISOString(),
+      isRecurring: result.is_recurring,
+      recurringDays: result.recurring_days
     });
 
-    if (this.eventForm.valid) {
-      const formValue = this.eventForm.value;
-
-      const startDate = moment(formValue.startDate)
-        .hours(formValue.startHour)
-        .minutes(0)
-        .seconds(0);
-
-      const result = {
-        action: 'save',
-        name: formValue.name,
-        start: startDate.toDate(),
-        end: startDate.clone().add(formValue.duration, 'minutes').toDate(),
-        is_recurring: formValue.is_recurring,
-        recurring_days: formValue.is_recurring ? 
-          Object.entries(formValue.weekdays)
-            .filter(([_, checked]) => checked)
-            .map(([day]) => day) : 
-          undefined
-      };
-
-      // Log event creation details
-      console.log('Event Creation Details:', {
-        name: result.name,
-        start: result.start,
-        end: result.end,
-        isRecurring: result.is_recurring,
-        recurringDays: result.recurring_days
-      });
-
-      this.dialogRef.close(result);
-    } else {
-      // If form is invalid, show specific error for recurring events
-      if (this.eventForm.get('is_recurring')?.value) {
-        const weekdaysGroup = this.eventForm.get('weekdays');
-        if (weekdaysGroup?.hasError('noDaysSelected')) {
-          this.snackBar.open('Please select at least one day for recurring events', 'Close', { duration: 3000 });
-        }
-      }
-
-      // Log all form control errors for debugging
-      Object.keys(this.eventForm.controls).forEach(key => {
-        const control = this.eventForm.get(key);
-        if (control?.errors) {
-          console.error(`Validation Error in ${key}:`, control.errors);
-        }
-      });
-    }
+    this.dialogRef.close(result);
   }
 
   onCancel() {
