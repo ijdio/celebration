@@ -6,11 +6,11 @@
 @include mat.core();
 
 html {
-  color-scheme: light;  // Set to light mode only
+  color-scheme: dark;  // Set to dark mode only
   @include mat.theme((
     color: (
       primary: mat.$cyan-palette,
-      theme-type: light,  // Explicitly set light theme
+      theme-type: dark,  // Explicitly set dark theme
     ),
     typography: Roboto,
     density: 0
@@ -36,6 +36,11 @@ body {
 .mat-form-field {
   width: 100%;
   margin-bottom: 16px;
+}
+
+:root {
+  --fc-border-color: black;
+  --fc-daygrid-event-dot-width: 5px;
 }
 
 // Responsive adjustments
