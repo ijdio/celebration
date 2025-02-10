@@ -3,14 +3,23 @@ from typing import List, Optional
 from fastapi import APIRouter, Depends, Query, HTTPException
 from sqlalchemy.orm import Session
 import logging
+import json
 
 from app.db.base import get_db
 from app.schemas.event import EventCreate, EventResponse, EventList
 from app.services.event_service import EventService
 
+# Get a logger specific to this module
 logger = logging.getLogger(__name__)
 
 router = APIRouter()
+
+def log_request_details(request_type: str, details: dict):
+    """
+    Log request details with a consistent format
+    """
+    log_message = f"{request_type.upper()} REQUEST: " + json.dumps(details, default=str)
+    logger.debug(log_message)
 
 @router.post("/", response_model=EventResponse, status_code=201)
 def create_event(
@@ -24,18 +33,13 @@ def create_event(
     - Checks for conflicts with existing events
     - Returns the created event
     """
-    # Log the incoming event creation request
-    logger.info(f"Received event creation request: {event.model_dump()}")
+    # Log detailed request information
+    log_request_details("event creation", {
+        "event_data": event.model_dump(),
+        "timestamp": datetime.now().isoformat()
+    })
     
     try:
-        # Detailed logging of event creation attempt
-        logger.debug(f"Event Creation Details:")
-        logger.debug(f"Name: {event.name}")
-        logger.debug(f"Start Time: {event.start_time}")
-        logger.debug(f"Duration: {event.duration} minutes")
-        logger.debug(f"Is Recurring: {event.is_recurring}")
-        logger.debug(f"Recurring Days: {event.recurring_days}")
-        
         # Create event service
         service = EventService(db)
         
@@ -45,20 +49,29 @@ def create_event(
         # Convert to response model
         event_response = EventResponse.from_orm(db_event)
         
-        # Additional logging of the response
-        logger.debug(f"Event Response: {event_response}")
+        # Log successful event creation
+        log_request_details("event creation success", {
+            "event_id": event_response.id,
+            "event_name": event_response.name,
+            "timestamp": datetime.now().isoformat()
+        })
         
-        logger.info(f"Event created successfully: ID {event_response.id}")
         return event_response
     
     except HTTPException as conflict_error:
         # Log conflict details
-        logger.warning(f"Event creation blocked: {conflict_error.detail}")
+        log_request_details("event creation conflict", {
+            "error_detail": conflict_error.detail,
+            "timestamp": datetime.now().isoformat()
+        })
         raise
     
     except Exception as e:
-        # Catch and log any unexpected errors
-        logger.error(f"Unexpected error during event creation: {str(e)}", exc_info=True)
+        # Log any unexpected errors
+        log_request_details("event creation error", {
+            "error": str(e),
+            "timestamp": datetime.now().isoformat()
+        })
         raise HTTPException(
             status_code=500, 
             detail=f"Unexpected error: {str(e)}"
@@ -78,30 +91,32 @@ def get_events(
     - end: Optional end time to filter events
     - Times should be provided in UTC
     """
+    # Log request details
+    log_request_details("event retrieval", {
+        "start_time": start,
+        "end_time": end,
+        "timestamp": datetime.now().isoformat()
+    })
+    
     try:
-        # Log the received parameters
-        logger.info(f"Fetching events - Start: {start}, End: {end}")
-        
         # Create event service
         event_service = EventService(db)
         
         # Fetch events
         events = event_service.get_events(start, end)
         
-        # Log the number of events found
-        logger.info(f"Found {len(events)} events")
-        
-        # Log detailed information about each event
-        for event in events:
-            logger.info(
-                f"Event Details: "
-                f"ID: {event.id}, "
-                f"Name: {event.name}, "
-                f"Start Time: {event.start_time}, "
-                f"Duration: {event.duration} minutes, "
-                f"Is Recurring: {event.is_recurring}, "
-                f"Recurring Days: {event.recurring_days}"
-            )
+        # Log events found
+        log_request_details("event retrieval success", {
+            "total_events": len(events),
+            "events": [
+                {
+                    "id": event.id, 
+                    "name": event.name, 
+                    "start_time": event.start_time
+                } for event in events
+            ],
+            "timestamp": datetime.now().isoformat()
+        })
         
         # Convert to response model
         event_responses = [EventResponse.from_orm(event) for event in events]
@@ -111,7 +126,10 @@ def get_events(
     
     except Exception as e:
         # Log any errors
-        logger.error(f"Error fetching events: {str(e)}", exc_info=True)
+        log_request_details("event retrieval error", {
+            "error": str(e),
+            "timestamp": datetime.now().isoformat()
+        })
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.get("/{event_id}", response_model=EventResponse)
@@ -122,10 +140,24 @@ def get_event(
     """
     Get a specific event by ID.
     """
+    log_request_details("event retrieval by id", {
+        "event_id": event_id,
+        "timestamp": datetime.now().isoformat()
+    })
+    
     service = EventService(db)
     event = service.get_event_by_id(event_id)
     if not event:
+        log_request_details("event retrieval by id error", {
+            "error": "Event not found",
+            "timestamp": datetime.now().isoformat()
+        })
         raise HTTPException(status_code=404, detail="Event not found")
+    log_request_details("event retrieval by id success", {
+        "event_id": event.id,
+        "event_name": event.name,
+        "timestamp": datetime.now().isoformat()
+    })
     return EventResponse.from_orm(event)
 
 @router.put("/{event_id}", response_model=EventResponse)
@@ -141,8 +173,19 @@ def update_event(
     - Checks for conflicts with other events
     - Returns the updated event
     """
+    log_request_details("event update", {
+        "event_id": event_id,
+        "event_data": event.model_dump(),
+        "timestamp": datetime.now().isoformat()
+    })
+    
     service = EventService(db)
     updated_event = service.update_event(event_id, event)
+    log_request_details("event update success", {
+        "event_id": updated_event.id,
+        "event_name": updated_event.name,
+        "timestamp": datetime.now().isoformat()
+    })
     return EventResponse.from_orm(updated_event)
 
 @router.delete("/{event_id}")
@@ -153,6 +196,15 @@ def delete_event(
     """
     Delete an event.
     """
+    log_request_details("event deletion", {
+        "event_id": event_id,
+        "timestamp": datetime.now().isoformat()
+    })
+    
     service = EventService(db)
     service.delete_event(event_id)
+    log_request_details("event deletion success", {
+        "event_id": event_id,
+        "timestamp": datetime.now().isoformat()
+    })
     return {"message": "Event deleted successfully"}

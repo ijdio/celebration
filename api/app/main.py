@@ -1,3 +1,20 @@
+import logging
+import sys
+
+# Configure logging
+logging.basicConfig(
+    level=logging.DEBUG,  # Set to DEBUG to capture all log levels
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.StreamHandler(sys.stdout)  # Output to console
+    ]
+)
+
+# Set loggers to DEBUG level
+logging.getLogger().setLevel(logging.DEBUG)
+logging.getLogger('uvicorn').setLevel(logging.DEBUG)
+logging.getLogger('app').setLevel(logging.DEBUG)
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
