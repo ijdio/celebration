@@ -106,6 +106,8 @@ export class CalendarComponent implements OnInit {
       selectable: true,
       selectMirror: true,
       dayMaxEvents: true,
+      height: 'auto',
+      stickyHeaderDates: false,
       select: this.handleDateSelect.bind(this),
       eventClick: this.handleEventClick.bind(this),
       eventsSet: this.handleEvents.bind(this),

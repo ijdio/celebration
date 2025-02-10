@@ -1,4 +1,53 @@
 .calendar-container {
-  height: calc(100vh - 64px);  // Adjust based on your app's header height
-  padding: 1rem;
+  height: 100%;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+:host {
+  display: block;
+  height: 100%;
+  overflow: hidden;
+}
+
+.fc {
+  height: 100%;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.fc-view-container {
+  flex-grow: 1;
+  overflow-y: auto;
+}
+
+.fc-toolbar {
+  flex-shrink: 0;
+}
+
+// Ensure the calendar takes full height while allowing internal scrolling
+.fc-daygrid, 
+.fc-timegrid {
+  overflow-y: auto;
+  max-height: 100%;
+}
+
+// Scrollbar styling for better aesthetics
+.fc-view-container::-webkit-scrollbar {
+  width: 8px;
+}
+
+.fc-view-container::-webkit-scrollbar-track {
+  background: #2c2c2c;
+}
+
+.fc-view-container::-webkit-scrollbar-thumb {
+  background-color: #3c3c3c;
+  border-radius: 4px;
+}
+
+.fc-view-container::-webkit-scrollbar-thumb:hover {
+  background-color: #4c4c4c;
 }
