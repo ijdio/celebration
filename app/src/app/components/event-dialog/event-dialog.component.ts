@@ -63,9 +63,7 @@ export class EventDialogComponent {
     console.log('Event Dialog Constructor Raw Data:', {
       data: JSON.parse(JSON.stringify(data)),
       startType: typeof data.start,
-      endType: typeof data.end,
       startValue: data.start ? moment(data.start).toISOString() : null,
-      endValue: data.end ? moment(data.end).toISOString() : null,
       event: data.event,
       isEditMode: data.isEditMode
     });
@@ -74,15 +72,18 @@ export class EventDialogComponent {
     const startMoment = normalizeDate(data.start);
     const startHour = startMoment.hours();
 
-    // Calculate duration using moment
-    const duration = data.start && data.end 
-      ? moment(normalizeDate(data.end)).diff(startMoment, 'minutes') 
-      : 30;  // Explicitly set default to 30 minutes
+    // Default duration is 30 minutes
+    const duration = data.event?.duration || 
+                     (data.duration && typeof data.duration === 'number' ? data.duration : 30);
 
-    console.log('Constructor Date Calculations:', {
-      startDate: startMoment.toISOString(),
-      startHour: startHour,
-      duration: duration
+    // Calculate end moment explicitly from start and duration
+    const endMoment = startMoment.clone().add(duration, 'minutes');
+
+    console.log('Duration Calculation Debug:', {
+      start: startMoment.toISOString(),
+      calculatedEnd: endMoment.toISOString(),
+      duration: duration,
+      startHour: startHour
     });
 
     // Determine recurring event details
@@ -100,7 +101,7 @@ export class EventDialogComponent {
       name: [data.event?.name || '', [Validators.required, Validators.minLength(1), Validators.maxLength(100)]],
       startDate: [startMoment.toDate(), Validators.required],
       startHour: [startHour, Validators.required],
-      duration: [duration || 30, [Validators.required, Validators.min(1)]],
+      duration: [duration, [Validators.required, Validators.min(1)]],
       is_recurring: [isRecurring],
       recurring_days: [recurringDays]
     });
@@ -152,6 +153,7 @@ export class EventDialogComponent {
       name: formValue.name,
       start: startMoment.toDate(),
       end: endMoment.toDate(),
+      duration: formValue.duration,
       is_recurring: formValue.is_recurring,
       recurring_days: formValue.is_recurring ? 
         formValue.recurring_days : 
@@ -163,6 +165,7 @@ export class EventDialogComponent {
       name: result.name,
       start: moment(result.start).toISOString(),
       end: moment(result.end).toISOString(),
+      duration: result.duration,
       isRecurring: result.is_recurring,
       recurringDays: result.recurring_days
     });

@@ -6,10 +6,12 @@ export interface EventBase {
   recurring_days?: string[];  // Use backend's day abbreviations
 }
 
-export interface EventCreate extends EventBase {}
+export interface EventCreate extends EventBase {
+  id?: number | string;  // Optional ID for update scenarios
+}
 
 export interface Event extends EventBase {
-  id: number | string;  // Allow both number and string for backwards compatibility
+  id: number | string;  // Mandatory ID for existing events
 }
 
 export interface EventList {
@@ -20,12 +22,5 @@ export interface CalendarEvent extends Event {
   title: string;
   start: string;
   end: string;
-  rrule?: {
-    freq: string;
-    byweekday: string[];
-  };
-}
-
-export interface EventListResponse {
-  events: Event[];
+  allDay?: boolean;
 }

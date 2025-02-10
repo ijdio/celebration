@@ -170,11 +170,11 @@ export class CalendarComponent implements OnInit {
         title: event.name,
         start: start.format(),
         end: end.format(),
+        duration: { minutes: event.duration }, // Add duration directly to the event
         allDay: false, // Assuming these are not all-day events
         extendedProps: {
           // Include additional event details
           originalEvent: event,
-          duration: event.duration,
           isRecurring: event.is_recurring,
           recurringDays: event.recurring_days
         }
@@ -346,7 +346,15 @@ export class CalendarComponent implements OnInit {
             },
             error: (error) => {
               console.error('Error updating event:', error);
-              this.snackBar.open('Failed to update event', 'Close', { duration: 3000 });
+              if (error.message === 'Event not scheduled due to conflicts.') {
+                // Show snackbar with the specific error message
+                this.snackBar.open('Event not scheduled due to conflicts.', 'Close', {
+                  duration: 3000
+                });
+              } else {
+                // Generic error handling for other types of errors
+                this.snackBar.open('Failed to update event', 'Close', { duration: 3000 });
+              }
             }
           });
         } else {
@@ -358,7 +366,15 @@ export class CalendarComponent implements OnInit {
             },
             error: (error) => {
               console.error('Error creating event:', error);
-              this.snackBar.open('Failed to create event', 'Close', { duration: 3000 });
+              if (error.message === 'Event not scheduled due to conflicts.') {
+                // Show snackbar with the specific error message
+                this.snackBar.open('Event not scheduled due to conflicts.', 'Close', {
+                  duration: 3000
+                });
+              } else {
+                // Generic error handling for other types of errors
+                this.snackBar.open('Failed to create event', 'Close', { duration: 3000 });
+              }
             }
           });
         }

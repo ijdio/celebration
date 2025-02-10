@@ -29,6 +29,10 @@ class EventService:
             if isinstance(event.start_time, str):
                 event.start_time = datetime.fromisoformat(event.start_time.replace('Z', '+00:00'))
             
+            # ENHANCED LOGGING FOR DURATION
+            logger.critical(f"DURATION VERIFICATION - Raw Duration: {event.duration}")
+            logger.critical(f"DURATION VERIFICATION - Duration Type: {type(event.duration)}")
+            
             # Log pre-conflict check details
             logger.debug(f"Pre-conflict check event details:")
             logger.debug(f"Start Time: {event.start_time}")
