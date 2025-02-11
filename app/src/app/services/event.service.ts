@@ -1,3 +1,15 @@
+/**
+ * Event Service module for managing event-related operations
+ * 
+ * Provides comprehensive functionality for:
+ * - Fetching events
+ * - Creating events
+ * - Updating events
+ * - Validating event conflicts
+ * 
+ * @module EventService
+ * @description Centralized service for event data management and interaction with backend API
+ */
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, throwError, of, switchMap } from 'rxjs';
@@ -7,36 +19,85 @@ import { Event, EventCreate, EventList } from '../models/event.model';
 import { EventValidationService } from './event-validation.service';
 import moment from 'moment';
 
-// Custom error class for event conflicts
+/**
+ * Custom error class for handling event scheduling conflicts
+ * 
+ * @class
+ * @extends {Error}
+ * @description Provides detailed error information when an event cannot be scheduled
+ */
 export class EventConflictError extends Error {
+  /**
+   * Creates an instance of EventConflictError
+   * 
+   * @param {string} conflictDetails - Detailed description of the conflict
+   */
   constructor(public conflictDetails: string) {
     super('Event not scheduled due to conflicts.');
     this.name = 'EventConflictError';
   }
 }
 
-// Interface to match backend event structure
+/**
+ * Interface defining the structure of event details from the backend
+ * 
+ * @interface
+ * @description Represents the core properties of an event as returned by the API
+ */
 export interface EventDetails {
+  /** Unique identifier for the event */
   id: number;
+  /** Name or title of the event */
   name: string;
+  /** Start time of the event in ISO string format */
   start_time: string;
+  /** Duration of the event in minutes */
   duration: number;
+  /** Flag indicating if the event is recurring */
   is_recurring: boolean;
+  /** Optional list of days for recurring events */
   recurring_days?: string | null;
 }
 
+/**
+ * Event Service for managing event-related HTTP operations
+ * 
+ * Features:
+ * - Fetching events with optional date range
+ * - Creating new events with conflict checking
+ * - Updating existing events
+ * - Detailed logging and error handling
+ * 
+ * @class
+ */
 @Injectable({
   providedIn: 'root'
 })
 export class EventService {
+  /** Base URL for API endpoints from environment configuration */
   private apiUrl = environment.apiUrl;
+
+  /** Local cache of events for conflict checking */
   private events: Event[] = [];
 
+  /**
+   * Creates an instance of EventService
+   * 
+   * @param {HttpClient} http - Angular's HTTP client for making API requests
+   * @param {EventValidationService} eventValidation - Service for validating event conflicts
+   */
   constructor(
     private http: HttpClient,
     private eventValidation: EventValidationService
   ) {}
 
+  /**
+   * Fetches events from the backend API
+   * 
+   * @param {Date} [start] - Optional start date to filter events
+   * @param {Date} [end] - Optional end date to filter events
+   * @returns {Observable<EventList>} Observable of event list
+   */
   getEvents(start?: Date, end?: Date): Observable<EventList> {
     console.log('Fetching Events from API', {
       startTime: start ? moment(start).format() : undefined,
@@ -83,6 +144,12 @@ export class EventService {
     );
   }
 
+  /**
+   * Retrieves a specific event by its ID
+   * 
+   * @param {number | string} id - Unique identifier of the event
+   * @returns {Observable<Event>} Observable of the event details
+   */
   getEvent(id: number | string): Observable<Event> {
     console.log('Service Fetching Event from API', {
       eventId: id,
@@ -108,6 +175,12 @@ export class EventService {
     );
   }
 
+  /**
+   * Retrieves detailed event information by its ID
+   * 
+   * @param {string} eventId - Unique identifier of the event
+   * @returns {Observable<EventDetails>} Observable of event details
+   */
   getEventById(eventId: string): Observable<EventDetails> {
     return this.http.get<EventDetails>(`${this.apiUrl}/events/${eventId}`).pipe(
       tap(event => {
@@ -128,6 +201,13 @@ export class EventService {
     );
   }
 
+  /**
+   * Creates a new event after checking for scheduling conflicts
+   * 
+   * @param {EventCreate} event - Event details to be created
+   * @returns {Observable<Event>} Observable of the created event
+   * @throws {EventConflictError} If the event conflicts with existing events
+   */
   createEvent(event: EventCreate): Observable<Event> {
     console.log('Service Creating Event', {
       eventData: event,
@@ -183,6 +263,14 @@ export class EventService {
     );
   }
 
+  /**
+   * Updates an existing event after checking for scheduling conflicts
+   * 
+   * @param {number | string} id - Unique identifier of the event to update
+   * @param {EventCreate} event - Updated event details
+   * @returns {Observable<Event>} Observable of the updated event
+   * @throws {EventConflictError} If the updated event conflicts with existing events
+   */
   updateEvent(id: number | string, event: EventCreate): Observable<Event> {
     console.log('Service Updating Event', {
       eventId: id,
@@ -202,13 +290,13 @@ export class EventService {
       start_time: moment(event.start_time).format('YYYY-MM-DDTHH:mm:ss.SSSZ')
     };
 
-    // First check for conflicts
+    // First check for conflicts, excluding the current event
     return this.getEvents().pipe(
       switchMap(eventList => {
-        const conflict = this.eventValidation.checkEventConflicts(
-          formattedEvent,  // Now includes ID
-          eventList.events
-        );
+        // Filter out the current event being updated from conflict check
+        const filteredEvents = eventList.events.filter(e => e.id !== id);
+        
+        const conflict = this.eventValidation.checkEventConflicts(formattedEvent, filteredEvents);
         if (conflict) {
           return throwError(() => new EventConflictError(conflict));
         }
@@ -217,18 +305,19 @@ export class EventService {
         return this.http.put<Event>(`${this.apiUrl}/events/${id}`, formattedEvent);
       }),
       tap(updatedEvent => {
-        // Update cached events
-        const index = this.events.findIndex(e => e.id === id);
+        // Update the cached events list
+        const index = this.events.findIndex(e => e.id === updatedEvent.id);
         if (index !== -1) {
           this.events[index] = updatedEvent;
         }
+
         console.log('Service Event Updated Successfully', {
           event: updatedEvent,
           timestamp: moment().format()
         });
       }),
       catchError(error => {
-        console.error('Service Error Updating Event', {
+        console.error('Service Event Update Error', {
           error: error,
           eventId: id,
           eventData: event,
@@ -239,6 +328,14 @@ export class EventService {
     );
   }
 
+  /**
+   * Updates the time of an existing event
+   * 
+   * @param {string} eventId - Unique identifier of the event to update
+   * @param {string} newStartTime - New start time of the event
+   * @param {number} newDuration - New duration of the event
+   * @returns {Observable<any>} Observable indicating successful update
+   */
   updateEventTime(eventId: string, newStartTime: string, newDuration: number): Observable<any> {
     // First, get the full event details
     return this.getEventById(eventId).pipe(
@@ -303,6 +400,12 @@ export class EventService {
     );
   }
 
+  /**
+   * Deletes an event by its ID
+   * 
+   * @param {number | string} id - Unique identifier of the event to delete
+   * @returns {Observable<void>} Observable indicating successful deletion
+   */
   deleteEvent(id: number | string): Observable<void> {
     console.log('Service Deleting Event', {
       eventId: id,
@@ -311,15 +414,16 @@ export class EventService {
 
     return this.http.delete<void>(`${this.apiUrl}/events/${id}`).pipe(
       tap(() => {
-        // Update cached events
+        // Remove the event from cached events
         this.events = this.events.filter(e => e.id !== id);
+
         console.log('Service Event Deleted Successfully', {
           eventId: id,
           timestamp: moment().format()
         });
       }),
       catchError(error => {
-        console.error('Error Deleting Event', {
+        console.error('Service Event Deletion Error', {
           error: error,
           eventId: id,
           timestamp: moment().format()

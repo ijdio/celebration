@@ -1,3 +1,14 @@
+/**
+ * Calendar component for managing and displaying events using FullCalendar
+ * 
+ * This component provides:
+ * - Interactive calendar view with multiple display modes (month, week, day, list)
+ * - Event creation, editing, and deletion functionality
+ * - Integration with EventService for data management
+ * 
+ * @module CalendarComponent
+ * @description Main calendar interface for event scheduling and visualization
+ */
 import { Component, OnInit, Inject, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
@@ -12,7 +23,7 @@ import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
 import interactionPlugin from '@fullcalendar/interaction';
 import rrulePlugin from '@fullcalendar/rrule';
-import listPlugin from '@fullcalendar/list'; // Import list plugin
+import listPlugin from '@fullcalendar/list';
 import moment from 'moment';
 
 import { EventDialogComponent } from '../event-dialog/event-dialog.component';
@@ -25,7 +36,10 @@ import { MatDatepickerModule } from '@angular/material/datepicker';
 import { DateAdapter, MAT_DATE_FORMATS, MAT_DATE_LOCALE } from '@angular/material/core';
 import { MomentDateAdapter, MAT_MOMENT_DATE_ADAPTER_OPTIONS, MatMomentDateModule } from '@angular/material-moment-adapter';
 
-// Custom date formats using moment
+/**
+ * Custom date formats using moment for consistent date representation
+ * @constant
+ */
 export const MY_FORMATS = {
   parse: {
     dateInput: 'LL',
@@ -38,6 +52,10 @@ export const MY_FORMATS = {
   },
 };
 
+/**
+ * Interface representing the structure for creating a new event
+ * @interface
+ */
 interface EventCreate {
   name: string;
   start_time: string;
@@ -46,6 +64,10 @@ interface EventCreate {
   recurring_days?: string[];
 }
 
+/**
+ * Interface for data passed to the event dialog
+ * @interface
+ */
 interface EventDialogData {
   id?: string | number;
   event?: Event;
@@ -56,6 +78,17 @@ interface EventDialogData {
   recurring_days?: string[];
 }
 
+/**
+ * Calendar component configuration and event management
+ * 
+ * Provides a comprehensive calendar interface with:
+ * - Multiple view modes (month, week, day, list)
+ * - Event creation, editing, and deletion
+ * - Recurring event support
+ * 
+ * @class
+ * @implements {OnInit}
+ */
 @Component({
   selector: 'app-calendar',
   templateUrl: './calendar.component.html',
@@ -85,17 +118,48 @@ interface EventDialogData {
   ]
 })
 export class CalendarComponent implements OnInit {
+  /** 
+   * Configuration options for the FullCalendar instance
+   * @type {CalendarOptions}
+   */
   calendarOptions: CalendarOptions;
+
+  /** 
+   * List of currently displayed events
+   * @type {EventApi[]}
+   */
   currentEvents: EventApi[] = [];
+
+  /** 
+   * Current view mode of the calendar
+   * @type {'calendar' | 'list'}
+   */
   currentView: 'calendar' | 'list' = 'calendar';
 
+  /** 
+   * Reference to the FullCalendar component
+   * @type {any}
+   */
   @ViewChild('calendarComponent') calendarComponent: any;
 
+  /**
+   * Creates an instance of CalendarComponent
+   * 
+   * Initializes calendar with:
+   * - FullCalendar plugins
+   * - Custom header toolbar
+   * - Event interaction settings
+   * 
+   * @param {MatDialog} dialog - Dialog service for opening event dialogs
+   * @param {MatSnackBar} snackBar - Snackbar service for displaying notifications
+   * @param {EventService} eventService - Service for managing event data
+   */
   constructor(
     @Inject(MatDialog) private dialog: MatDialog,
     @Inject(MatSnackBar) private snackBar: MatSnackBar,
     @Inject(EventService) private eventService: EventService
   ) {
+    // Initialize calendar options with comprehensive configuration
     this.calendarOptions = {
       plugins: [
         dayGridPlugin,
@@ -124,9 +188,9 @@ export class CalendarComponent implements OnInit {
       eventsSet: this.handleEvents.bind(this),
       eventDrop: this.handleEventDrop.bind(this),
       eventResize: this.handleEventResize.bind(this),
-      allDaySlot: false, // Remove all-day slot
-      selectOverlap: false, // Prevent selecting overlapping time slots
-      eventOverlap: false, // Prevent events from overlapping
+      allDaySlot: false,
+      selectOverlap: false,
+      eventOverlap: false,
       buttonText: {
         month: 'Month',
         week: 'Week',
@@ -136,10 +200,22 @@ export class CalendarComponent implements OnInit {
     };
   }
 
+  /**
+   * Lifecycle hook that is called after data-bound properties are initialized
+   * Loads events from the event service
+   */
   ngOnInit(): void {
     this.loadEvents();
   }
 
+  /**
+   * Loads events from the event service and populates the calendar
+   * 
+   * Handles:
+   * - Fetching events from backend
+   * - Mapping events to calendar format
+   * - Error handling for event loading
+   */
   loadEvents(): void {
     this.eventService.getEvents().subscribe({
       next: (eventList: { events: Event[] }) => {
@@ -171,6 +247,17 @@ export class CalendarComponent implements OnInit {
     });
   }
 
+  /**
+   * Maps backend event models to FullCalendar event input format
+   * 
+   * Handles:
+   * - Date normalization using moment
+   * - Converting event duration
+   * - Adding extended properties
+   * 
+   * @param {Event[]} events - List of events to map
+   * @returns {EventInput[]} Mapped calendar events
+   */
   mapToCalendarEvents(events: Event[]): EventInput[] {
     console.log('Mapping Events to Calendar Format', {
       totalEvents: events.length,
@@ -182,58 +269,31 @@ export class CalendarComponent implements OnInit {
       const start = moment.utc(event.start_time).local();
       const end = start.clone().add(event.duration, 'minutes');
       
-      // Create an EventInput object that matches FullCalendar's type requirements
       const calendarEvent: EventInput = {
-        id: event.id.toString(), // Convert to string
+        id: event.id.toString(),
         title: event.name,
         start: start.format(),
         end: end.format(),
-        duration: { minutes: event.duration }, // Add duration directly to the event
-        allDay: false, // Assuming these are not all-day events
+        duration: { minutes: event.duration },
+        allDay: false,
         extendedProps: {
-          // Include additional event details
           originalEvent: event,
           isRecurring: event.is_recurring,
           recurringDays: event.recurring_days
         }
       };
 
-      // Map recurring events to FullCalendar's rrule format
-      if (event.is_recurring && event.recurring_days && event.recurring_days.length > 0) {
-        // Convert backend day abbreviations to FullCalendar's daysOfWeek
-        const dayMapping: {[key: string]: string} = {
-          'MO': 'MO', // Monday
-          'TU': 'TU', // Tuesday
-          'WE': 'WE', // Wednesday
-          'TH': 'TH', // Thursday
-          'FR': 'FR', // Friday
-          'SA': 'SA', // Saturday
-          'SU': 'SU'  // Sunday
-        };
-
-        // Parse start moment and calculate one year later
-        const startMoment = moment(start);
-        const oneYearLater = startMoment.clone().add(1, 'year');
-
-        calendarEvent.rrule = {
-          freq: 'weekly',
-          byweekday: event.recurring_days.map(day => dayMapping[day]),
-          dtstart: startMoment.toISOString(),
-          until: oneYearLater.toISOString()
-        };
-
-        console.log('Recurring Event Mapped', {
-          event: event,
-          startDate: startMoment.toISOString(),
-          endDate: oneYearLater.toISOString(),
-          recurringDays: event.recurring_days,
-          timestamp: moment().toISOString()
-        });
-      }
       return calendarEvent;
     });
   }
 
+  /**
+   * Handles date selection on the calendar
+   * 
+   * Opens the event dialog for creating a new event
+   * 
+   * @param {DateSelectArg} selectInfo - Date selection information
+   */
   handleDateSelect(selectInfo: DateSelectArg): void {
     // Use moment for all date manipulations
     const startDate = moment(selectInfo.start);
@@ -258,6 +318,13 @@ export class CalendarComponent implements OnInit {
     this.openEventDialog(dialogData);
   }
 
+  /**
+   * Handles event clicks on the calendar
+   * 
+   * Opens the event dialog for editing or deleting the event
+   * 
+   * @param {EventClickArg} clickInfo - Event click information
+   */
   handleEventClick(clickInfo: EventClickArg): void {
     // Calculate duration in minutes
     const startMoment = moment(clickInfo.event.start);
@@ -303,6 +370,13 @@ export class CalendarComponent implements OnInit {
     this.openEventDialog(dialogData);
   }
 
+  /**
+   * Handles event drops on the calendar
+   * 
+   * Updates the event's start time and duration
+   * 
+   * @param {{ event: EventApi, oldEvent: EventApi, revert: () => void }} dropInfo - Event drop information
+   */
   handleEventDrop(dropInfo: { 
     event: EventApi, 
     oldEvent: EventApi, 
@@ -395,6 +469,13 @@ export class CalendarComponent implements OnInit {
     });
   }
 
+  /**
+   * Handles event resizes on the calendar
+   * 
+   * Updates the event's duration
+   * 
+   * @param {{ event: EventApi, oldEvent: EventApi, revert: () => void }} resizeInfo - Event resize information
+   */
   handleEventResize(resizeInfo: { 
     event: EventApi, 
     oldEvent: EventApi, 
@@ -480,6 +561,11 @@ export class CalendarComponent implements OnInit {
     });
   }
 
+  /**
+   * Opens the event dialog for creating or editing an event
+   * 
+   * @param {EventDialogData} dialogData - Data for the event dialog
+   */
   openEventDialog(dialogData?: EventDialogData): void {
     // Ensure dates are normalized with moment
     const safeDialogData = dialogData ? {
@@ -589,10 +675,22 @@ export class CalendarComponent implements OnInit {
     });
   }
 
+  /**
+   * Handles events being set on the calendar
+   * 
+   * Updates the list of current events
+   * 
+   * @param {EventApi[]} events - List of events
+   */
   handleEvents(events: EventApi[]): void {
     this.currentEvents = events;
   }
 
+  /**
+   * Toggles the calendar view between calendar and list modes
+   * 
+   * @param {'calendar' | 'list'} view - New view mode
+   */
   toggleView(view: 'calendar' | 'list') {
     this.currentView = view;
     

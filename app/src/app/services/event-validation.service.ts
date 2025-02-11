@@ -1,21 +1,61 @@
+/**
+ * Event Validation Service for managing complex event scheduling conflicts
+ * 
+ * Provides comprehensive functionality for:
+ * - Checking event conflicts
+ * - Handling recurring and non-recurring events
+ * - Detecting time overlaps
+ * 
+ * @module EventValidationService
+ * @description Advanced service for detecting scheduling conflicts across various event types
+ */
 import { Injectable } from '@angular/core';
 import { Event, EventCreate } from '../models/event.model';
 import moment, { Moment } from 'moment';
 
+/**
+ * Event Validation Service for detecting scheduling conflicts
+ * 
+ * Features:
+ * - Sophisticated conflict detection algorithm
+ * - Support for recurring and non-recurring events
+ * - Precise time and day overlap checking
+ * 
+ * @class
+ */
 @Injectable({
   providedIn: 'root'
 })
 export class EventValidationService {
-  // Day mapping from abbreviation to moment day number (0-6)
+  /** 
+   * Mapping of day abbreviations to moment day numbers (0-6)
+   * @type {Object}
+   * @private
+   */
   private readonly dayMap: { [key: string]: number } = {
     'SU': 0, 'MO': 1, 'TU': 2, 'WE': 3, 'TH': 4, 'FR': 5, 'SA': 6
   };
 
-  // Reverse day mapping from moment day number to abbreviation
+  /** 
+   * Reverse mapping of moment day numbers to day abbreviations
+   * @type {Object}
+   * @private
+   */
   private readonly reverseDayMap: { [key: number]: string } = {
     0: 'SU', 1: 'MO', 2: 'TU', 3: 'WE', 4: 'TH', 5: 'FR', 6: 'SA'
   };
 
+  /**
+   * Checks for conflicts between a new event and existing events
+   * 
+   * Handles:
+   * - Recurring and non-recurring event conflict detection
+   * - Skipping events being updated
+   * 
+   * @param {EventCreate} newEvent - Event to be checked for conflicts
+   * @param {Event[]} existingEvents - List of existing events
+   * @returns {string | null} Conflict message or null if no conflicts
+   */
   checkEventConflicts(newEvent: EventCreate, existingEvents: Event[]): string | null {
     console.log('Starting conflict check for event:', {
       newEvent: {
@@ -43,6 +83,19 @@ export class EventValidationService {
     return null;
   }
 
+  /**
+   * Checks conflict between a specific pair of events
+   * 
+   * Handles multiple conflict scenarios:
+   * - Exact same start time
+   * - Recurring event conflicts
+   * - Time overlap for non-recurring events
+   * 
+   * @param {EventCreate} newEvent - Event to be checked
+   * @param {Event} existingEvent - Existing event to compare against
+   * @returns {string | null} Conflict message or null if no conflicts
+   * @private
+   */
   private checkEventPairConflict(newEvent: EventCreate, existingEvent: Event): string | null {
     console.log('Checking event pair for conflicts:', {
       newEvent: {
@@ -109,6 +162,19 @@ export class EventValidationService {
     return null;
   }
 
+  /**
+   * Checks conflicts for recurring events
+   * 
+   * Handles complex scenarios:
+   * - Both events recurring
+   * - Multi-day events
+   * - Day and time overlap
+   * 
+   * @param {EventCreate} newEvent - New event to check
+   * @param {Event} existingEvent - Existing event to compare
+   * @returns {string | null} Conflict message or null if no conflicts
+   * @private
+   */
   private checkRecurringConflict(newEvent: EventCreate, existingEvent: Event): string | null {
     const newEventStart = moment.utc(newEvent.start_time);
     const existingEventStart = moment.utc(existingEvent.start_time);
@@ -284,6 +350,16 @@ export class EventValidationService {
     return null;
   }
 
+  /**
+   * Checks if two time ranges overlap
+   * 
+   * @param {Moment} start1 - Start time of first event
+   * @param {Moment} end1 - End time of first event
+   * @param {Moment} start2 - Start time of second event
+   * @param {Moment} end2 - End time of second event
+   * @returns {boolean} True if events overlap, false otherwise
+   * @private
+   */
   private checkTimeOverlap(start1: Moment, end1: Moment, start2: Moment, end2: Moment): boolean {
     // Ensure all moments are in UTC
     const utcStart1 = start1.clone().utc();
@@ -355,36 +431,46 @@ export class EventValidationService {
     return hasOverlap;
   }
 
-  private getCommonDays(days1: string[], days2: string[]): string[] {
-    return days1.filter(day => days2.includes(day));
-  }
-
-  private createEventTimeOnDay(event: Event | EventCreate, day: string): Moment {
-    const eventStart = moment.utc(event.start_time);
-    const targetDay = this.dayMap[day];
-    
-    // Create a new moment for the same time on the target day
-    return moment(eventStart)
-      .day(targetDay)
-      .hour(eventStart.hour())
-      .minute(eventStart.minute())
-      .second(0)
-      .millisecond(0);
-  }
-
-  private formatConflictMessage(existingEvent: Event, day?: string): string {
-    const baseMessage = `Conflict with event '${existingEvent.name}'`;
-    const timeRange = `${moment.utc(existingEvent.start_time).format('HH:mm')} - ${
-      moment.utc(existingEvent.start_time).add(existingEvent.duration, 'minutes').format('HH:mm')
+  /**
+   * Formats a conflict message for an event
+   * 
+   * @param {Event} conflictingEvent - Event causing the conflict
+   * @param {string} [recurringDays] - Optional recurring days information
+   * @returns {string} Formatted conflict message
+   * @private
+   */
+  private formatConflictMessage(conflictingEvent: Event, recurringDays?: string): string {
+    const baseMessage = `Conflict with event '${conflictingEvent.name}'`;
+    const timeRange = `${moment.utc(conflictingEvent.start_time).format('HH:mm')} - ${
+      moment.utc(conflictingEvent.start_time).add(conflictingEvent.duration, 'minutes').format('HH:mm')
     }`;
     
-    if (existingEvent.is_recurring) {
-      return `${baseMessage} (recurring on ${day || existingEvent.recurring_days?.join(', ')}, ${timeRange})`;
+    if (conflictingEvent.is_recurring) {
+      return `${baseMessage} (recurring on ${recurringDays || conflictingEvent.recurring_days?.join(', ')}, ${timeRange})`;
     } else {
-      return `${baseMessage} (${moment.utc(existingEvent.start_time).format('YYYY-MM-DD')}, ${timeRange})`;
+      return `${baseMessage} (${moment.utc(conflictingEvent.start_time).format('YYYY-MM-DD')}, ${timeRange})`;
     }
   }
 
+  /**
+   * Finds common days between two day lists
+   * 
+   * @param {string[]} list1 - First list of days
+   * @param {string[]} list2 - Second list of days
+   * @returns {string[]} List of common days
+   * @private
+   */
+  private getCommonDays(list1: string[], list2: string[]): string[] {
+    return list1.filter(day => list2.includes(day));
+  }
+
+  /**
+   * Expands recurring days for multi-day events
+   * 
+   * @param {string[]} days - Original recurring days
+   * @returns {string[]} Expanded list of days including next day
+   * @private
+   */
   private expandMultiDayRecurringDays(days: string[]): string[] {
     const expanded = new Set<string>();
     const dayOrder = ['SU', 'MO', 'TU', 'WE', 'TH', 'FR', 'SA'];

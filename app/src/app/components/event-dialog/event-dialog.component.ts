@@ -1,3 +1,15 @@
+/**
+ * EventDialogComponent manages the creation and editing of calendar events.
+ * 
+ * This component provides a dialog interface for users to:
+ * - Create new events
+ * - Edit existing events
+ * - Set event details like name, start time, duration
+ * - Configure recurring event patterns
+ * 
+ * @class
+ * @description Dialog for creating and editing calendar events with form validation
+ */
 import { Component, Inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators, AbstractControl } from '@angular/forms';
@@ -13,6 +25,10 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatMomentDateModule } from '@angular/material-moment-adapter';
 import moment from 'moment';
 
+/**
+ * Configuration for the event dialog component
+ * Defines the structure and modules required for the dialog
+ */
 @Component({
   selector: 'app-event-dialog',
   templateUrl: './event-dialog.component.html',
@@ -35,19 +51,41 @@ import moment from 'moment';
   ]
 })
 export class EventDialogComponent {
+  /**
+   * Reactive form group for managing event input
+   * @type {FormGroup}
+   */
   eventForm: FormGroup;
+
+  /**
+   * Array of hour options for start time selection
+   * @type {Array<{value: number, label: string}>}
+   */
   hours = Array.from({ length: 24 }, (_, i) => ({
     value: i,
     label: i.toString().padStart(2, '0') + ':00'
   }));
 
+  /**
+   * Creates an instance of EventDialogComponent
+   * 
+   * @param {FormBuilder} fb - Angular's form builder for creating reactive forms
+   * @param {MatDialogRef<EventDialogComponent>} dialogRef - Reference to the dialog
+   * @param {any} data - Data passed to the dialog for initialization
+   * @param {MatSnackBar} snackBar - Service for showing notification messages
+   */
   constructor(
     private fb: FormBuilder,
     public dialogRef: MatDialogRef<EventDialogComponent>,
     @Inject(MAT_DIALOG_DATA) public data: any,
     private snackBar: MatSnackBar
   ) {
-    // Use moment for all date normalizations
+    /**
+     * Normalizes a date using moment
+     * 
+     * @param {Date | string | null} date - Date to normalize
+     * @returns {moment.Moment} Normalized date
+     */
     const normalizeDate = (date: Date | string | null): moment.Moment => {
       if (!date) {
         throw new Error('No date provided for event');
@@ -85,6 +123,9 @@ export class EventDialogComponent {
       ? (data.event?.recurring_days || data.recurring_days || []).map((day: string) => day.toUpperCase())
       : [];
 
+    /**
+     * Initializes the event form with default values and validation
+     */
     this.eventForm = this.fb.group({
       name: [data.event?.name || '', [Validators.required, Validators.minLength(1), Validators.maxLength(100)]],
       startDate: [startMoment.toDate(), Validators.required],
@@ -94,7 +135,9 @@ export class EventDialogComponent {
       recurring_days: [recurringDays]
     });
 
-    // Watch is_recurring changes to handle recurring days validation
+    /**
+     * Watches for changes to the is_recurring form control and updates validation accordingly
+     */
     this.eventForm.get('is_recurring')?.valueChanges.subscribe((is_recurring: boolean) => {
       const recurringDaysControl = this.eventForm.get('recurring_days');
       if (is_recurring) {
@@ -109,7 +152,17 @@ export class EventDialogComponent {
     this.eventForm.get('is_recurring')?.updateValueAndValidity();
   }
 
-  onSubmit() {
+  /**
+   * Handles form submission, validates input, and closes the dialog
+   * 
+   * Performs the following actions:
+   * - Validates form inputs
+   * - Converts dates and times to proper format
+   * - Closes dialog with event creation/update details
+   * 
+   * @throws {Error} If form validation fails
+   */
+  onSubmit(): void {
     // Validate form before processing
     if (this.eventForm.invalid) {
       this.snackBar.open('Please fill out all required fields correctly', 'Close', { duration: 3000 });
@@ -161,11 +214,22 @@ export class EventDialogComponent {
     this.dialogRef.close(result);
   }
 
-  onCancel() {
-    this.dialogRef.close();
+  /**
+   * Closes the dialog without saving changes
+   * 
+   * @description Dismisses the event dialog when user cancels event creation/editing
+   */
+  onCancel(): void {
+    this.dialogRef.close(null);
   }
 
-  onDelete() {
+  /**
+   * Closes the dialog and signals event deletion
+   * 
+   * This method is typically used when editing an existing event
+   * and the user chooses to delete it.
+   */
+  onDelete(): void {
     this.dialogRef.close({ action: 'delete' });
   }
 }
