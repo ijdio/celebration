@@ -9,7 +9,17 @@
     "api:test": "cd api && pytest",
     "api:build": "cd api && docker build -t celebration-api .",
     "api:run": "cd api && docker run -p 8000:8000 celebration-api",
-    "api:stop": "docker stop $(docker ps -q --filter ancestor=celebration-api)"
+    "api:stop": "docker stop $(docker ps -q --filter ancestor=celebration-api)",
+    "app:install": "cd app && npm install",
+    "app:dev": "cd app && npm start",
+    "app:build": "cd app && npm run build",
+    "app:test": "cd app && npm test",
+    "app:docker:build": "cd app && docker build -t celebration-frontend .",
+    "app:docker:run": "cd app && docker run -p 80:80 celebration-frontend",
+    "app:docker:stop": "docker stop $(docker ps -q --filter ancestor=celebration-frontend)",
+    "compose:up": "docker-compose up --build",
+    "compose:down": "docker-compose down",
+    "compose:restart": "docker-compose down && docker-compose up --build"
   },
   "keywords": ["event", "scheduler", "calendar"],
   "author": "",
