@@ -15,5 +15,5 @@ import { SidenavComponent } from './components/sidenav/sidenav.component';
   ]
 })
 export class AppComponent {
-  title = 'Celebration Event Scheduler';
+  title = 'Celebration';
 }

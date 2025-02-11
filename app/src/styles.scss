@@ -9,7 +9,7 @@ html {
   color-scheme: dark;  // Set to dark mode only
   @include mat.theme((
     color: (
-      primary: mat.$cyan-palette,
+      primary: mat.$blue-palette,
       theme-type: dark,  // Explicitly set dark theme
     ),
     typography: Roboto,
@@ -45,4 +45,140 @@ body {
   .app-container {
     padding: 10px;
   }
+  // Event colors
+  --fc-event-bg-color: rgb(87, 91, 199);
+  --fc-event-border-color: #4a2d5d; // Dark purple border
+  --fc-event-text-color: #ffffff;
+}
+
+.fc {
+  height: 100%;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.fc-view-container {
+  flex-grow: 1;
+  overflow-y: auto;
+}
+
+.fc-toolbar {
+  flex-shrink: 0;
+}
+
+// Ensure the calendar takes full height while allowing internal scrolling
+.fc-daygrid, 
+.fc-timegrid {
+  overflow-y: auto;
+  max-height: 100%;
+}
+
+// Scrollbar styling for better aesthetics
+.fc-view-container::-webkit-scrollbar {
+  width: 8px;
+}
+
+.fc-view-container::-webkit-scrollbar-track {
+  background: #2c2c2c;
+}
+
+.fc-view-container::-webkit-scrollbar-thumb {
+  background-color: #3c3c3c;
+  border-radius: 4px;
+}
+
+.fc-view-container::-webkit-scrollbar-thumb:hover {
+  background-color: #4c4c4c;
+}
+
+// Ensure list view is readable in dark theme
+.fc-list-event {
+  color: #ffffff;
+  background-color: #2c2c2c;
+}
+
+.fc-list-event-title {
+  color: #ffffff;
+}
+
+.fc-list-day-cushion {
+  background-color: #1e1e1e;
+  color: #ffffff;
+}
+
+// Draggable event styles
+.fc-event {
+  cursor: move; // Show move cursor for draggable events
+  transition: opacity 0.2s ease;
+
+  &:hover {
+    opacity: 0.8; // Slight opacity change on hover
+  }
+}
+
+.fc-event-dragging {
+  opacity: 0.5; // Reduce opacity while dragging
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3); // Add shadow for depth
+}
+
+.fc-event-drag-mirror {
+  opacity: 0.7;
+  box-shadow: 0 6px 8px rgba(0, 0, 0, 0.4);
+  z-index: 9999; // Ensure drag preview is on top
+}
+
+// Resizable event styles
+.fc-event-resizer {
+  opacity: 0.7;
+  transition: opacity 0.2s ease;
+
+  &:hover {
+    opacity: 1;
+    cursor: row-resize;
+  }
+}
+
+.fc-event-resizing {
+  opacity: 0.5;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+  transition: all 0.2s ease;
+}
+
+.fc-event-resizer-handle {
+  background-color: rgba(255, 255, 255, 0.5);
+  border: 2px solid #4c4c4c;
+  border-radius: 4px;
+  
+  &:hover {
+    background-color: rgba(255, 255, 255, 0.8);
+  }
+}
+
+.fc {
+  .fc-toolbar {
+    .fc-button {
+      background-color: #3c3c3c;
+      color: #e3e6f7;
+      border: none;
+      
+      &:hover {
+        background-color: #4c4c4c;
+      }
+      
+      &.fc-button-active {
+        background-color: #575bc7;
+      }
+    }
+  }
+}
+
+.fc-list-event-dot,
+.fc-daygrid-event-dot {
+  border-color: rgb(87, 91, 199) !important;
+  background-color: rgb(87, 91, 199) !important;
+}
+
+.fc-day-today {
+  background-color: rgba(87, 91, 199, 0.2) !important;
 }
