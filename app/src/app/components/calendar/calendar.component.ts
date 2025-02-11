@@ -1,8 +1,10 @@
-import { Component, OnInit, Inject } from '@angular/core';
+import { Component, OnInit, Inject, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { MatDialog, MatDialogModule, MatDialogRef, MatDialogConfig } from '@angular/material/dialog';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
 import { FullCalendarModule } from '@fullcalendar/angular';
 import { CalendarOptions, EventApi, DateSelectArg, EventClickArg, EventInput } from '@fullcalendar/core';
 import momentPlugin from '@fullcalendar/moment';
@@ -10,6 +12,7 @@ import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
 import interactionPlugin from '@fullcalendar/interaction';
 import rrulePlugin from '@fullcalendar/rrule';
+import listPlugin from '@fullcalendar/list'; // Import list plugin
 import moment from 'moment';
 
 import { EventDialogComponent } from '../event-dialog/event-dialog.component';
@@ -64,6 +67,8 @@ interface EventDialogData {
     ReactiveFormsModule,
     MatDialogModule,
     MatSnackBarModule,
+    MatButtonModule,
+    MatIconModule,
     FullCalendarModule,
     MatDatepickerModule,
     MatMomentDateModule
@@ -82,6 +87,9 @@ interface EventDialogData {
 export class CalendarComponent implements OnInit {
   calendarOptions: CalendarOptions;
   currentEvents: EventApi[] = [];
+  currentView: 'calendar' | 'list' = 'calendar';
+
+  @ViewChild('calendarComponent') calendarComponent: any;
 
   constructor(
     @Inject(MatDialog) private dialog: MatDialog,
@@ -94,12 +102,13 @@ export class CalendarComponent implements OnInit {
         timeGridPlugin,
         interactionPlugin,
         momentPlugin,
-        rrulePlugin
+        rrulePlugin,
+        listPlugin
       ],
       headerToolbar: {
         left: 'prev,next today',
         center: 'title',
-        right: 'dayGridMonth,timeGridWeek,timeGridDay'
+        right: 'dayGridMonth,timeGridWeek,timeGridDay,listMonth'
       },
       initialView: 'dayGridMonth',
       editable: true,
@@ -399,5 +408,20 @@ export class CalendarComponent implements OnInit {
 
   handleEvents(events: EventApi[]): void {
     this.currentEvents = events;
+  }
+
+  toggleView(view: 'calendar' | 'list') {
+    this.currentView = view;
+    
+    // Update calendar view based on selected type
+    const viewMap = {
+      'calendar': 'dayGridMonth',
+      'list': 'listMonth'
+    };
+    
+    if (this.calendarComponent) {
+      const calendarApi = this.calendarComponent.getApi();
+      calendarApi.changeView(viewMap[view]);
+    }
   }
 }

@@ -41,10 +41,7 @@ body {
 :root {
   --fc-border-color: black;
   --fc-daygrid-event-dot-width: 5px;
-}
-
-// Responsive adjustments
-@media (max-width: 600px) {
+  --fc-list-event-hover-bg-color: #121212; 
   .app-container {
     padding: 10px;
   }
