@@ -116,47 +116,36 @@ export class EventValidationService {
       }
     });
 
-    // First check for exact same start time and same day for non-recurring events
+    // If both events are non-recurring, do a more precise conflict check
     if (!newEvent.is_recurring && !existingEvent.is_recurring) {
-      // Convert both times to UTC for comparison
       const newStart = moment.utc(newEvent.start_time);
       const existingStart = moment.utc(existingEvent.start_time);
-      
-      console.log('UTC Time Comparison:', {
-        newEventUTC: newStart.format(),
-        existingEventUTC: existingStart.format(),
-        isSameDay: newStart.isSame(existingStart, 'day'),
-        isSameMinute: newStart.isSame(existingStart, 'minute')
-      });
-      
-      // If on the same day and same start time, it's a conflict
-      if (newStart.isSame(existingStart, 'day') && newStart.isSame(existingStart, 'minute')) {
-        return this.formatConflictMessage(existingEvent);
-      }
-    }
-
-    // If either event is recurring, check recurring conflict
-    if (newEvent.is_recurring || existingEvent.is_recurring) {
-      const conflict = this.checkRecurringConflict(newEvent, existingEvent);
-      if (conflict) {
-        return conflict;
-      }
-    }
-
-    // Case 1: Both events are non-recurring
-    if (!newEvent.is_recurring && !existingEvent.is_recurring) {
-      // Convert all times to UTC for comparison
-      const newStart = moment.utc(newEvent.start_time);
       const newEnd = moment.utc(newEvent.start_time).add(newEvent.duration, 'minutes');
-      const existingStart = moment.utc(existingEvent.start_time);
       const existingEnd = moment.utc(existingEvent.start_time).add(existingEvent.duration, 'minutes');
 
-      // Only check for overlap if they're on the same day in UTC
-      if (newStart.isSame(existingStart, 'day')) {
-        if (this.checkTimeOverlap(newStart, newEnd, existingStart, existingEnd)) {
-          return this.formatConflictMessage(existingEvent);
-        }
+      // Conflict only if events are on the same day and have time overlap
+      const isSameDay = newStart.isSame(existingStart, 'day');
+      const hasTimeOverlap = 
+        (newStart.isBefore(existingEnd) && newEnd.isAfter(existingStart)) ||
+        (existingStart.isBefore(newEnd) && existingEnd.isAfter(newStart));
+
+      if (isSameDay && hasTimeOverlap) {
+        console.log('Non-recurring event time overlap detected', {
+          newStart: newStart.format(),
+          newEnd: newEnd.format(),
+          existingStart: existingStart.format(),
+          existingEnd: existingEnd.format()
+        });
+        return this.formatConflictMessage(existingEvent);
       }
+
+      // No conflict for non-recurring events
+      return null;
+    }
+
+    // If either event is recurring, proceed with existing recurring conflict check
+    if (newEvent.is_recurring || existingEvent.is_recurring) {
+      return this.checkRecurringConflict(newEvent, existingEvent);
     }
 
     return null;

@@ -283,6 +283,46 @@ export class CalendarComponent implements OnInit {
         }
       };
 
+      // Add rrule for recurring events
+      if (event.is_recurring && event.recurring_days && event.recurring_days.length > 0) {
+        const recurringDays = event.recurring_days.map(day => {
+          const dayMap: { [key: string]: number } = {
+            // Full day names
+            'Monday': 1,
+            'Tuesday': 2,
+            'Wednesday': 3,
+            'Thursday': 4,
+            'Friday': 5,
+            'Saturday': 6,
+            'Sunday': 0,
+          
+            // Abbreviated day names
+            'MO': 1,
+            'TU': 2,
+            'WE': 3,
+            'TH': 4,
+            'FR': 5,
+            'SA': 6,
+            'SU': 0
+          };
+          return dayMap[day.trim().toUpperCase()] ?? 0;
+        });
+
+        calendarEvent.rrule = {
+          freq: 'weekly',
+          byweekday: recurringDays,
+          dtstart: start.format(),
+          // Repeat for a year by default
+          until: moment(start).add(1, 'year').format()
+        };
+
+        console.log('Recurring Event RRule', {
+          recurringDays,
+          start: start.format(),
+          originalDays: event.recurring_days
+        });
+      }
+
       return calendarEvent;
     });
   }

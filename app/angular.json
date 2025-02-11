@@ -83,12 +83,7 @@
               "buildTarget": "app:build:development"
             }
           },
-          "defaultConfiguration": "development",
-          "options": {
-            "customWebpackConfig": {
-              "path": "./webpack.config.js"
-            }
-          }
+          "defaultConfiguration": "development"
         },
         "extract-i18n": {
           "builder": "@angular-devkit/build-angular:extract-i18n"
