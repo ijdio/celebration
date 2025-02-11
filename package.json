@@ -1,9 +1,15 @@
 {
-  "name": "celebration-poc",
+  "name": "celebration",
   "version": "1.0.0",
   "description": "Celebration Event Scheduler",
   "scripts": {
-    "reset:db": "cd api && python run_recreate_db.py"
+    "reset:db": "cd api && python run_recreate_db.py",
+    "api:install": "cd api && pip install -r requirements.txt",
+    "api:dev": "cd api && uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload",
+    "api:test": "cd api && pytest",
+    "api:build": "cd api && docker build -t celebration-api .",
+    "api:run": "cd api && docker run -p 8000:8000 celebration-api",
+    "api:stop": "docker stop $(docker ps -q --filter ancestor=celebration-api)"
   },
   "keywords": ["event", "scheduler", "calendar"],
   "author": "",
