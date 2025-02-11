@@ -1,59 +1,128 @@
-# App
+# Celebration Frontend Application
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 19.1.6.
+## Overview
+A modern, responsive Angular application for event scheduling and management.
 
-## Development server
+## Technologies Used
+- Angular 17
+- TypeScript
+- RxJS
+- Angular Material
+- Moment.js (for date/time handling)
 
-To start a local development server, run:
+## Prerequisites
+- Node.js 18.x or higher
+- npm 9.x or higher
+- Angular CLI 19.x
 
+## Project Structure
+```
+src/
+├── app/
+│   ├── components/
+│   │   ├── calendar/
+│   │   ├── event-dialog/
+│   │   └── sidenav/
+│   ├── models/
+│   ├── services/
+│   └── app.module.ts
+├── assets/
+└── styles/
+```
+
+## Local Development Setup
+
+### 1. Install Dependencies
 ```bash
+npm install
+```
+
+### 2. Development Server
+```bash
+# Start development server
 ng serve
+
+# Open browser to http://localhost:4200
 ```
 
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
-
-## Code scaffolding
-
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
-
+### 3. Build for Production
 ```bash
+# Compile and optimize
+ng build --configuration=production
+```
+
+## Available Scripts
+
+### Development
+```bash
+# Start development server
+npm start
+
+# Run with specific port
+ng serve --port 4200
+```
+
+### Testing
+```bash
+# Run unit tests
+npm test
+
+# Run end-to-end tests
+npm run e2e
+```
+
+### Build
+```bash
+# Development build
+npm run build
+
+# Production build
+npm run build:prod
+```
+
+## Code Generation
+```bash
+# Generate component
 ng generate component component-name
+
+# Generate service
+ng generate service service-name
 ```
 
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
+## Configuration
 
-```bash
-ng generate --help
-```
+### Environment Files
+- `environment.ts`: Development configuration
+- `environment.prod.ts`: Production configuration
 
-## Building
+### Customize Configuration
+Edit `angular.json` to modify build and serve settings.
 
-To build the project run:
+## Performance Optimization
+- Lazy loading of modules
+- Ahead-of-Time (AOT) compilation
+- Production build minimization
 
-```bash
-ng build
-```
+## Troubleshooting
+- Clear npm cache: `npm cache clean --force`
+- Reinstall dependencies: `rm -rf node_modules && npm install`
 
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
+## Browser Compatibility
+- Chrome (latest)
+- Firefox (latest)
+- Edge (latest)
 
-## Running unit tests
+## Known Limitations
+- Requires modern browser with ES6 support
+- Limited to weekly recurring events
+- No user authentication in this version
 
-To execute unit tests with the [Karma](https://karma-runner.github.io) test runner, use the following command:
+## Contributing
+1. Fork the repository
+2. Create feature branch
+3. Commit changes
+4. Push to branch
+5. Create pull request
 
-```bash
-ng test
-```
-
-## Running end-to-end tests
-
-For end-to-end (e2e) testing, run:
-
-```bash
-ng e2e
-```
-
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
-
-## Additional Resources
-
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+## License
+ISC License

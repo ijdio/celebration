@@ -1,6 +1,6 @@
 # Celebration: Event Scheduling Application
 
-## 🚀 Quick Start with Docker (Recommended)
+## Quick Start with Docker (Recommended)
 
 ```bash
 # Clone the repository
@@ -11,30 +11,30 @@ cd celebration
 npm run compose:up
 ```
 
-🌐 Access the application:
+Access the application:
 - Frontend: `http://localhost`
 - API Endpoints: `http://localhost:8000/api`
 
-## 📋 Project Overview
+## Project Overview
 
 Celebration is a robust event scheduling application that allows users to create, view, and manage recurring and one-time events with intelligent conflict prevention.
 
-### 🎯 Project Requirements Fulfilled
+### Project Requirements Fulfilled
 
-- ✅ Event Creation with Comprehensive Details
+- Event Creation with Comprehensive Details
   - Event name
   - Specific start time
   - Duration in minutes
   - Support for one-time and weekly recurring events
 
-- ✅ Conflict Prevention
+- Conflict Prevention
   - Prevents scheduling multiple events at the same time
 
-- ✅ User Interface
+- User Interface
   - Compatible with modern browsers (Chrome, Firefox)
   - Intuitive event viewing and creation
 
-- ✅ Data Persistence
+- Data Persistence
   - Server-side storage with SQLite
   - Events persist across browser sessions
 
@@ -136,7 +136,7 @@ npm install
 ng serve
 ```
 
-## 📦 Available Scripts
+## Available Scripts
 
 ### Root Level
 ```bash
@@ -155,7 +155,7 @@ npm run compose:up
 npm run compose:down
 ```
 
-## 📝 Assumptions & Limitations
+## Assumptions & Limitations
 - Weekly recurring events repeat for a full year
 - App displays events in the user's local time
 - Backend stores events in UTC-0
