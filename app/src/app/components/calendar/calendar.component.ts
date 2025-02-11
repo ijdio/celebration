@@ -269,6 +269,7 @@ export class CalendarComponent implements OnInit {
       const start = moment.utc(event.start_time).local();
       const end = start.clone().add(event.duration, 'minutes');
       
+      // Create an EventInput object that matches FullCalendar's type requirements
       const calendarEvent: EventInput = {
         id: event.id.toString(),
         title: event.name,
@@ -283,43 +284,36 @@ export class CalendarComponent implements OnInit {
         }
       };
 
-      // Add rrule for recurring events
+      // Map recurring events to FullCalendar's rrule format
       if (event.is_recurring && event.recurring_days && event.recurring_days.length > 0) {
-        const recurringDays = event.recurring_days.map(day => {
-          const dayMap: { [key: string]: number } = {
-            // Full day names
-            'Monday': 1,
-            'Tuesday': 2,
-            'Wednesday': 3,
-            'Thursday': 4,
-            'Friday': 5,
-            'Saturday': 6,
-            'Sunday': 0,
-          
-            // Abbreviated day names
-            'MO': 1,
-            'TU': 2,
-            'WE': 3,
-            'TH': 4,
-            'FR': 5,
-            'SA': 6,
-            'SU': 0
-          };
-          return dayMap[day.trim().toUpperCase()] ?? 0;
-        });
+        // Use direct day mapping instead of converting to numbers
+        const dayMapping: {[key: string]: string} = {
+          'MO': 'MO', // Monday
+          'TU': 'TU', // Tuesday
+          'WE': 'WE', // Wednesday
+          'TH': 'TH', // Thursday
+          'FR': 'FR', // Friday
+          'SA': 'SA', // Saturday
+          'SU': 'SU'  // Sunday
+        };
+
+        // Parse start moment and calculate one year later
+        const startMoment = moment(start);
+        const oneYearLater = startMoment.clone().add(1, 'year');
 
         calendarEvent.rrule = {
           freq: 'weekly',
-          byweekday: recurringDays,
-          dtstart: start.format(),
-          // Repeat for a year by default
-          until: moment(start).add(1, 'year').format()
+          byweekday: event.recurring_days.map(day => dayMapping[day]),
+          dtstart: startMoment.toISOString(),
+          until: oneYearLater.toISOString()
         };
 
-        console.log('Recurring Event RRule', {
-          recurringDays,
-          start: start.format(),
-          originalDays: event.recurring_days
+        console.log('Recurring Event Mapped', {
+          event: event,
+          startDate: startMoment.toISOString(),
+          endDate: oneYearLater.toISOString(),
+          recurringDays: event.recurring_days,
+          timestamp: moment().toISOString()
         });
       }
 
