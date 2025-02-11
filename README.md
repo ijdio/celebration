@@ -1,163 +1,165 @@
-# Celebration Event Scheduler
+# Celebration: Event Scheduling Application
 
-A modern web application for scheduling and managing events with support for recurring events.
+## 🚀 Quick Start with Docker (Recommended)
 
-## Features
+```bash
+# Clone the repository
+git clone https://github.com/ijdio/celebration.git
+cd celebration
 
-- Create and view scheduled events
-- Support for one-time and recurring weekly events
-- Automatic timezone handling and UTC storage
-- Conflict detection for overlapping events
-- Modern, responsive UI using FullCalendar
-- RESTful API using FastAPI
+# Run the entire application using Docker Compose
+npm run compose:up
+```
 
-## Tech Stack
+🌐 Access the application:
+- Frontend: `http://localhost`
+- API Endpoints: `http://localhost:8000/api`
 
-### Backend
-- Python 3.11+
-- FastAPI
-- SQLAlchemy (with SQLite)
-- Pydantic for data validation
+## 📋 Project Overview
+
+Celebration is a robust event scheduling application that allows users to create, view, and manage recurring and one-time events with intelligent conflict prevention.
+
+### 🎯 Project Requirements Fulfilled
+
+- ✅ Event Creation with Comprehensive Details
+  - Event name
+  - Specific start time
+  - Duration in minutes
+  - Support for one-time and weekly recurring events
+
+- ✅ Conflict Prevention
+  - Prevents scheduling multiple events at the same time
+
+- ✅ User Interface
+  - Compatible with modern browsers (Chrome, Firefox)
+  - Intuitive event viewing and creation
+
+- ✅ Data Persistence
+  - Server-side storage with SQLite
+  - Events persist across browser sessions
+
+## 🛠 Technologies & Rationale
+
+### Backend (API)
+- **Python (FastAPI)**
+  - Chosen for its high performance and type safety
+  - Automatic API documentation with Swagger
+  - Excellent async support
+  - Quick development with Pydantic models
+
+- **SQLAlchemy**
+  - Powerful ORM for database interactions
+  - Supports complex querying and relationship management
+  - Database agnostic (easily switchable)
+
+- **Uvicorn**
+  - High-performance ASGI server
+  - Ideal for async Python web applications
 
 ### Frontend
-- Angular 17
-- FullCalendar with Recurring Events plugin
-- Moment.js for timezone handling
-- Angular Material for UI components
+- **Angular**
+  - Comprehensive framework with strong typing
+  - Robust dependency injection
+  - Excellent for complex, scalable applications
+  - Strong community support
 
-## Prerequisites
+- **TypeScript**
+  - Adds static typing to JavaScript
+  - Improves code quality and developer experience
 
-- Python 3.11 or higher
-- Node.js 18.x or higher
-- npm 9.x or higher
+- **Material Design**
+  - Consistent, modern UI components
+  - Responsive design out of the box
 
-## Project Structure
+### DevOps & Deployment
+- **Docker**
+  - Containerization for consistent development and deployment
+  - Simplified environment management
+  - Easy scaling and portability
 
-```
-celebration-poc/
-├── api/                    # Backend FastAPI application
-│   ├── alembic/           # Database migrations
-│   ├── app/
-│   │   ├── models/        # SQLAlchemy models
-│   │   ├── schemas/       # Pydantic schemas
-│   │   ├── services/      # Business logic
-│   │   └── api/          # API routes
-│   ├── tests/            # Backend tests
-│   └── requirements.txt   # Python dependencies
-│
-├── app/                   # Frontend Angular application
-│   ├── src/
-│   │   ├── app/
-│   │   │   ├── components/
-│   │   │   ├── services/
-│   │   │   └── models/
-│   │   ├── assets/
-│   │   └── styles/
-│   └── package.json
-│
-└── docker/               # Docker configuration
-    ├── Dockerfile.api
-    └── Dockerfile.app
-```
+- **Docker Compose**
+  - Orchestrates multi-container applications
+  - Simplifies service configuration and networking
 
-## Getting Started
+## 🔧 Local Development
 
-### Backend Setup
-
-1. Create a virtual environment and activate it:
-   ```bash
-   python -m venv venv
-   source venv/bin/activate  # On Windows: venv\Scripts\activate
-   ```
-
-2. Install dependencies:
-   ```bash
-   cd api
-   pip install -r requirements.txt
-   ```
-
-3. Run migrations:
-   ```bash
-   alembic upgrade head
-   ```
-
-4. Start the backend server:
-   ```bash
-   uvicorn app.main:app --reload
-   ```
-
-### Frontend Setup
-
-1. Install dependencies:
-   ```bash
-   cd app
-   npm install
-   ```
-
-2. Start the development server:
-   ```bash
-   ng serve
-   ```
-
-The application will be available at:
-- Frontend: http://localhost:4200
-- Backend API: http://localhost:8000
-- API Documentation: http://localhost:8000/docs
-
-## Development
+### Prerequisites
+- Docker
+- Docker Compose
+- Node.js (for npm scripts)
 
 ### Backend Development
 
-The backend uses FastAPI with SQLAlchemy for the ORM. Key points:
+### 1. Clone the Repository
+```bash
+git clone <repository-url>
+cd celebration-2/api
+```
 
-- All times are stored in UTC
-- Database migrations are handled by Alembic
-- API documentation is auto-generated using OpenAPI
-- Input validation using Pydantic models
+### 2. Create Virtual Environment
+```bash
+python -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+```
+
+### 3. Install Dependencies
+```bash
+pip install -r requirements.txt
+```
+
+### 4. Environment Configuration
+Create a `.env` file in the `api` directory with the following variables:
+```
+DATABASE_URL=sqlite:///./events.db
+LOG_LEVEL=DEBUG
+```
+
+### 5. Run the Application
+```bash
+# Development mode
+uvicorn app.main:app --reload
+
+# Production mode
+uvicorn app.main:app --host 0.0.0.0 --port 8000
+```
+
 
 ### Frontend Development
-
-The frontend is built with Angular and uses:
-
-- FullCalendar for event display
-- Moment.js for timezone handling
-- Reactive forms for event creation
-- Angular Material for styling
-
-## Testing
-
-### Backend Tests
-
-Run the backend tests with:
 ```bash
-cd api
-pytest
-```
-
-### Frontend Tests
-
-Run the frontend tests with:
-```bash
+# Navigate to app directory
 cd app
-ng test
+
+# Install dependencies
+npm install
+
+# Start development server
+ng serve
 ```
 
-## Docker Support
+## 📦 Available Scripts
 
-Build and run with Docker:
-
+### Root Level
 ```bash
-docker-compose up --build
+# Install all dependencies
+npm run api:install
+npm run app:install
+
+# Build Docker images
+npm run api:docker:build
+npm run app:docker:build
+
+# Run entire application
+npm run compose:up
+
+# Stop application
+npm run compose:down
 ```
 
-## Assumptions
-
-1. Events are stored in UTC timezone
-2. Frontend handles timezone conversion using Moment.js
-3. No authentication required (single-user system)
-4. SQLite is sufficient for persistence
-5. Recurring events are limited to weekly patterns
-
-## License
-
-MIT License - see LICENSE file for details
+## 📝 Assumptions & Limitations
+- Weekly recurring events repeat for a full year
+- App displays events in the user's local time
+- Backend stores events in UTC-0
+- Daylight Savings Time applied for locales that observe it
+- Database persists between sessions and browsers in Docker container, reset when container is stopped (easily modified with Volume Mounts)
+- SQLite used for simplicity (recommend PostgreSQL for production)
+- No user authentication in this version
