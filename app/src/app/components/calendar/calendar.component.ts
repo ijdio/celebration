@@ -130,6 +130,8 @@ export class CalendarComponent implements OnInit {
         endTime: '17:00'    // 5:00 PM
       },
       allDaySlot: false, // Remove all-day slot
+      selectOverlap: false, // Prevent selecting overlapping time slots
+      eventOverlap: false, // Prevent events from overlapping
     };
   }
 
