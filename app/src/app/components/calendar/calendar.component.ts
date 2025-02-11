@@ -110,11 +110,11 @@ export class CalendarComponent implements OnInit {
         center: 'title',
         right: 'dayGridMonth,timeGridWeek,timeGridDay,listMonth'
       },
-      initialView: 'dayGridMonth',
+      initialView: 'timeGridWeek',
       editable: true,
       eventResizableFromStart: true,
       selectable: true,
-      selectMirror: true,
+      selectMirror: false,
       dayMaxEvents: true,
       height: 'auto',
       stickyHeaderDates: false,
@@ -124,14 +124,15 @@ export class CalendarComponent implements OnInit {
       eventsSet: this.handleEvents.bind(this),
       eventDrop: this.handleEventDrop.bind(this),
       eventResize: this.handleEventResize.bind(this),
-      businessHours: {
-        daysOfWeek: [1, 2, 3, 4, 5], // Monday to Friday
-        startTime: '09:00', // 9:00 AM
-        endTime: '17:00'    // 5:00 PM
-      },
       allDaySlot: false, // Remove all-day slot
       selectOverlap: false, // Prevent selecting overlapping time slots
       eventOverlap: false, // Prevent events from overlapping
+      buttonText: {
+        month: 'Month',
+        week: 'Week',
+        day: 'Day',
+        list: 'List'
+      },
     };
   }
 

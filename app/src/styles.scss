@@ -155,7 +155,21 @@ body {
   }
 }
 
+.fc-timegrid-event-harness-inset .fc-timegrid-event {
+  box-shadow: none;
+}
+
 .fc {
+  .fc-toolbar-title {
+    font-family: 'Roboto', sans-serif;
+    font-weight: 400;
+  }
+
+  .fc-col-header-cell-cushion {
+    font-family: 'Roboto', sans-serif;
+    font-weight: 400;
+  }
+
   .fc-toolbar {
     .fc-button {
       background-color: #3c3c3c;
@@ -181,4 +195,9 @@ body {
 
 .fc-day-today {
   background-color: rgba(87, 91, 199, 0.2) !important;
+}
+
+@font-face {
+  font-family: 'Pacifico';
+  src: url('assets/fonts/Pacifico-Regular.ttf') format('truetype');
 }
