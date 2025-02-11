@@ -69,7 +69,7 @@ uvicorn app.main:app --reload
 uvicorn app.main:app --host 0.0.0.0 --port 8000
 ```
 
-## 🐳 Docker Deployment
+## Docker Deployment
 
 ### Build Docker Image
 ```bash
