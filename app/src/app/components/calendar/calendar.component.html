@@ -1,21 +1,4 @@
 <div class="calendar-container">
-  <div class="view-toggle">
-    <button 
-      mat-raised-button 
-      [color]="currentView === 'calendar' ? 'primary' : 'basic'"
-      (click)="toggleView('calendar')">
-      <mat-icon>calendar_month</mat-icon>
-      Calendar View
-    </button>
-    <button 
-      mat-raised-button 
-      [color]="currentView === 'list' ? 'primary' : 'basic'"
-      (click)="toggleView('list')">
-      <mat-icon>list</mat-icon>
-      List View
-    </button>
-  </div>
-
   <full-calendar 
     #calendarComponent
     [options]="calendarOptions"
