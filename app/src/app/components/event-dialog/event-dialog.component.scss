@@ -10,7 +10,11 @@ mat-form-field {
 }
 
 mat-dialog-actions {
-  padding: 1rem;
+  padding: 1.5rem 1rem;
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  background-color: rgba(0, 0, 0, 0.03);
 }
 
 :host {
@@ -46,15 +50,6 @@ mat-dialog-content {
     mat-checkbox {
       display: block;
     }
-  }
-}
-
-mat-dialog-actions {
-  padding: 16px 0;
-  margin-bottom: 0;
-  
-  button {
-    margin-left: 8px;
   }
 }
 

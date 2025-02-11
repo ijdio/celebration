@@ -4,10 +4,18 @@ import { MatSidenavModule } from '@angular/material/sidenav';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatToolbarModule } from '@angular/material/toolbar';
+import { MatExpansionModule } from '@angular/material/expansion';
 import { CalendarComponent } from '../calendar/calendar.component';
 import { EventDialogComponent } from '../event-dialog/event-dialog.component';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
-import moment from 'moment'; // Use default import
+import moment from 'moment';
+
+interface SidebarSection {
+  title: string;
+  icon: string;
+  content: string;
+  expanded?: boolean;
+}
 
 @Component({
   selector: 'app-sidenav',
@@ -19,6 +27,7 @@ import moment from 'moment'; // Use default import
     MatButtonModule,
     MatToolbarModule,
     MatDialogModule,
+    MatExpansionModule,
     CalendarComponent
   ],
   templateUrl: './sidenav.component.html',
@@ -29,6 +38,56 @@ export class SidenavComponent implements OnInit {
 
   sidenavOpened = true;
   isBrowser = false;
+
+  sidebarSections: SidebarSection[] = [
+    {
+      title: 'Quick Links',
+      icon: 'link',
+      content: `
+        <div class="quick-links">
+          <button mat-stroked-button color="primary">
+            <mat-icon>calendar_today</mat-icon>
+            View Calendar
+          </button>
+          <button mat-stroked-button color="accent">
+            <mat-icon>search</mat-icon>
+            Find Events
+          </button>
+        </div>
+      `,
+      expanded: true
+    },
+    {
+      title: 'Upcoming Events',
+      icon: 'event',
+      content: `
+        <div class="upcoming-events">
+          <p>No upcoming events</p>
+          <small>Check your calendar for scheduled events</small>
+        </div>
+      `
+    },
+    {
+      title: 'Event Categories',
+      icon: 'category',
+      content: `
+        <div class="event-categories">
+          <button mat-raised-button color="primary" class="category-btn">
+            <mat-icon>work</mat-icon>
+            Work
+          </button>
+          <button mat-raised-button color="accent" class="category-btn">
+            <mat-icon>favorite</mat-icon>
+            Personal
+          </button>
+          <button mat-raised-button color="warn" class="category-btn">
+            <mat-icon>cake</mat-icon>
+            Birthday
+          </button>
+        </div>
+      `
+    }
+  ];
 
   constructor(
     @Inject(PLATFORM_ID) private platformId: Object,

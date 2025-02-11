@@ -12,18 +12,18 @@ mat-sidenav-container {
 mat-sidenav {
   width: 250px;
   background-color: #2c2c2c; // Dark background for sidenav
-  padding: 20px;
+  padding: 0; // Remove padding
   color: #ffffff; // Ensure text is visible
 }
 
 .sidenav-content {
   display: flex;
   flex-direction: column;
-  padding: 16px;
-
+  width: 100%; // Maximize width
+  
   .create-event-btn {
-    width: 100%;
-    margin-bottom: 16px;
+    width: calc(100% - 48px); // Increase padding subtraction
+    margin: 24px; // Increase margin/padding
     display: flex;
     align-items: center;
     justify-content: center;
@@ -32,10 +32,38 @@ mat-sidenav {
       margin-right: 8px;
     }
   }
+
+  mat-accordion {
+    width: 100%; // Maximize accordion width
+    
+    ::ng-deep .mat-expansion-panel {
+      margin: 0; // Remove default margins
+      border-radius: 0; // Remove border radius
+    }
+  }
 }
 
 mat-sidenav-content {
   background-color: #1e1e1e;
   padding: 20px;
   color: #ffffff; // Ensure text is visible
+}
+
+// Styling for accordion content
+.quick-links, .upcoming-events, .event-categories {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 16px;
+
+  button {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    mat-icon {
+      margin-right: 8px;
+    }
+  }
 }

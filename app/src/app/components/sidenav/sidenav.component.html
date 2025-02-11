@@ -13,8 +13,22 @@
           <mat-icon>add</mat-icon>
           Create Event
         </button>
-        <h3>Sidebar</h3>
-        <!-- Add sidebar content here -->
+
+        <mat-accordion>
+          <mat-expansion-panel 
+            *ngFor="let section of sidebarSections" 
+            [expanded]="section.expanded"
+          >
+            <mat-expansion-panel-header>
+              <mat-panel-title>
+                <mat-icon>{{ section.icon }}</mat-icon>
+                {{ section.title }}
+              </mat-panel-title>
+            </mat-expansion-panel-header>
+            
+            <div [innerHTML]="section.content"></div>
+          </mat-expansion-panel>
+        </mat-accordion>
       </div>
     </mat-sidenav>
     <mat-sidenav-content>
