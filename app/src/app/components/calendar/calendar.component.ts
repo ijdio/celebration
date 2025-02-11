@@ -112,6 +112,7 @@ export class CalendarComponent implements OnInit {
       },
       initialView: 'dayGridMonth',
       editable: true,
+      eventResizableFromStart: true,
       selectable: true,
       selectMirror: true,
       dayMaxEvents: true,
@@ -121,6 +122,8 @@ export class CalendarComponent implements OnInit {
       select: this.handleDateSelect.bind(this),
       eventClick: this.handleEventClick.bind(this),
       eventsSet: this.handleEvents.bind(this),
+      eventDrop: this.handleEventDrop.bind(this),
+      eventResize: this.handleEventResize.bind(this),
       businessHours: {
         daysOfWeek: [1, 2, 3, 4, 5], // Monday to Friday
         startTime: '09:00', // 9:00 AM
@@ -295,6 +298,183 @@ export class CalendarComponent implements OnInit {
     };
 
     this.openEventDialog(dialogData);
+  }
+
+  handleEventDrop(dropInfo: { 
+    event: EventApi, 
+    oldEvent: EventApi, 
+    revert: () => void 
+  }) {
+    const event = dropInfo.event;
+    const oldEvent = dropInfo.oldEvent;
+
+    // Ensure we have a valid start time
+    if (!event.start) {
+      console.error('No start time for dragged event');
+      dropInfo.revert();
+      return;
+    }
+
+    // Safely get the original event details
+    const originalEventDetails = event.extendedProps['originalEvent'] || {};
+
+    // Calculate new start time and duration
+    const newStartMoment = moment(event.start);
+    const newEndMoment = event.end ? moment(event.end) : newStartMoment.clone().add(
+      originalEventDetails.duration || 30, 
+      'minutes'
+    );
+    const newDuration = newEndMoment.diff(newStartMoment, 'minutes');
+
+    // Validate duration
+    if (newDuration <= 0) {
+      console.error('Invalid event duration after drag');
+      dropInfo.revert();
+      return;
+    }
+
+    // Log the drag event details with more robust logging
+    console.log('Event Drag Details', {
+      eventId: event.id,
+      oldStartTime: moment(oldEvent.start).toISOString(),
+      newStartTime: newStartMoment.toISOString(),
+      oldDuration: originalEventDetails.duration || 30,
+      newDuration: newDuration,
+      timestamp: moment().toISOString(),
+      originalEventDetails: originalEventDetails
+    });
+
+    // Update event in the database
+    this.eventService.updateEventTime(
+      event.id, 
+      newStartMoment.toISOString(), 
+      newDuration
+    ).subscribe({
+      next: (response) => {
+        // Show success message
+        this.snackBar.open('Event time updated successfully', 'Close', { 
+          duration: 3000 
+        });
+        
+        // Reload events to ensure consistency
+        this.loadEvents();
+      },
+      error: (error) => {
+        // Log the full error
+        console.error('Complete Event Drag Update Error', {
+          error: error,
+          eventId: event.id,
+          timestamp: moment().toISOString()
+        });
+
+        // Revert the event if update fails
+        dropInfo.revert();
+        
+        // Show detailed error message
+        const errorMessage = error.message || 'Failed to update event time';
+        this.snackBar.open(`Update failed: ${errorMessage}`, 'Close', { 
+          duration: 5000 
+        });
+
+        // Additional error tracking
+        try {
+          // Try to parse and log any additional error details
+          const errorDetails = error.error || {};
+          console.error('Detailed Error Information', {
+            message: errorDetails.message,
+            detail: errorDetails.detail,
+            status: errorDetails.status
+          });
+        } catch (parseError) {
+          console.error('Error parsing error details', parseError);
+        }
+      }
+    });
+  }
+
+  handleEventResize(resizeInfo: { 
+    event: EventApi, 
+    oldEvent: EventApi, 
+    revert: () => void 
+  }) {
+    const event = resizeInfo.event;
+    const oldEvent = resizeInfo.oldEvent;
+
+    // Ensure we have valid start and end times
+    if (!event.start || !event.end) {
+      console.error('Invalid event times during resize');
+      resizeInfo.revert();
+      return;
+    }
+
+    // Calculate new duration
+    const newStartMoment = moment(event.start);
+    const newEndMoment = moment(event.end);
+    const newDuration = newEndMoment.diff(newStartMoment, 'minutes');
+
+    // Validate duration
+    if (newDuration <= 0) {
+      console.error('Invalid event duration after resize');
+      resizeInfo.revert();
+      return;
+    }
+
+    // Log the resize event details
+    console.log('Event Resize Details', {
+      eventId: event.id,
+      oldStartTime: moment(oldEvent.start).toISOString(),
+      newStartTime: newStartMoment.toISOString(),
+      oldDuration: oldEvent.extendedProps['originalEvent']?.duration || 30,
+      newDuration: newDuration,
+      timestamp: moment().toISOString()
+    });
+
+    // Update event in the database
+    this.eventService.updateEventTime(
+      event.id, 
+      newStartMoment.toISOString(), 
+      newDuration
+    ).subscribe({
+      next: (response) => {
+        // Show success message
+        this.snackBar.open('Event duration updated successfully', 'Close', { 
+          duration: 3000 
+        });
+        
+        // Reload events to ensure consistency
+        this.loadEvents();
+      },
+      error: (error) => {
+        // Log the full error
+        console.error('Complete Event Resize Update Error', {
+          error: error,
+          eventId: event.id,
+          timestamp: moment().toISOString()
+        });
+
+        // Revert the event if update fails
+        resizeInfo.revert();
+        
+        // Show detailed error message
+        const errorMessage = error.message || 'Failed to update event duration';
+        this.snackBar.open(`Update failed: ${errorMessage}`, 'Close', { 
+          duration: 5000 
+        });
+
+        // Additional error tracking
+        try {
+          // Try to parse and log any additional error details
+          const errorDetails = error.error || {};
+          console.error('Detailed Resize Error Information', {
+            message: errorDetails.message,
+            detail: errorDetails.detail,
+            status: errorDetails.status
+          });
+        } catch (parseError) {
+          console.error('Error parsing resize error details', parseError);
+        }
+      }
+    });
   }
 
   openEventDialog(dialogData?: EventDialogData): void {

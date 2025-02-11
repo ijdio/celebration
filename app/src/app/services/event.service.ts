@@ -15,6 +15,16 @@ export class EventConflictError extends Error {
   }
 }
 
+// Interface to match backend event structure
+export interface EventDetails {
+  id: number;
+  name: string;
+  start_time: string;
+  duration: number;
+  is_recurring: boolean;
+  recurring_days?: string | null;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -94,6 +104,26 @@ export class EventService {
           timestamp: moment().format()
         });
         return throwError(() => new Error('Failed to fetch event'));
+      })
+    );
+  }
+
+  getEventById(eventId: string): Observable<EventDetails> {
+    return this.http.get<EventDetails>(`${this.apiUrl}/events/${eventId}`).pipe(
+      tap(event => {
+        console.log('Retrieved Event Details', {
+          eventId,
+          event,
+          timestamp: new Date().toISOString()
+        });
+      }),
+      catchError(error => {
+        console.error('Error retrieving event details', {
+          eventId,
+          error,
+          timestamp: new Date().toISOString()
+        });
+        return throwError(() => new Error('Failed to retrieve event details'));
       })
     );
   }
@@ -203,6 +233,70 @@ export class EventService {
           eventId: id,
           eventData: event,
           timestamp: moment().format()
+        });
+        return throwError(() => error);
+      })
+    );
+  }
+
+  updateEventTime(eventId: string, newStartTime: string, newDuration: number): Observable<any> {
+    // First, get the full event details
+    return this.getEventById(eventId).pipe(
+      switchMap(existingEvent => {
+        // Prepare the full update payload
+        const updatePayload: EventDetails = {
+          id: existingEvent.id,
+          name: existingEvent.name,
+          start_time: newStartTime,
+          duration: newDuration,
+          is_recurring: existingEvent.is_recurring,
+          // Convert recurring_days to comma-separated string or null
+          recurring_days: existingEvent.recurring_days 
+            ? (Array.isArray(existingEvent.recurring_days) 
+                ? existingEvent.recurring_days.join(',') 
+                : existingEvent.recurring_days)
+            : null
+        };
+
+        console.log('Event Update Payload', {
+          payload: updatePayload,
+          timestamp: new Date().toISOString()
+        });
+
+        return this.http.put<any>(`${this.apiUrl}/events/${existingEvent.id}`, updatePayload).pipe(
+          tap(response => {
+            console.log('Event time updated successfully', {
+              eventId,
+              newStartTime,
+              newDuration,
+              response,
+              timestamp: new Date().toISOString()
+            });
+          }),
+          catchError(error => {
+            console.error('Detailed Error updating event time', {
+              eventId,
+              payload: updatePayload,
+              errorStatus: error.status,
+              errorBody: error.error,
+              errorMessage: error.message,
+              timestamp: new Date().toISOString()
+            });
+            
+            // If there's a specific error message from the backend, use it
+            const errorMessage = error.error?.message || 
+              error.error?.detail || 
+              'Failed to update event time';
+            
+            return throwError(() => new Error(errorMessage));
+          })
+        );
+      }),
+      catchError(error => {
+        console.error('Error in event update process', {
+          eventId,
+          error,
+          timestamp: new Date().toISOString()
         });
         return throwError(() => error);
       })

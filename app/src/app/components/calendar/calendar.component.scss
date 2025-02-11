@@ -85,3 +85,51 @@
   background-color: #1e1e1e;
   color: #ffffff;
 }
+
+// Draggable event styles
+.fc-event {
+  cursor: move; // Show move cursor for draggable events
+  transition: opacity 0.2s ease;
+
+  &:hover {
+    opacity: 0.8; // Slight opacity change on hover
+  }
+}
+
+.fc-event-dragging {
+  opacity: 0.5; // Reduce opacity while dragging
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3); // Add shadow for depth
+}
+
+.fc-event-drag-mirror {
+  opacity: 0.7;
+  box-shadow: 0 6px 8px rgba(0, 0, 0, 0.4);
+  z-index: 9999; // Ensure drag preview is on top
+}
+
+// Resizable event styles
+.fc-event-resizer {
+  opacity: 0.7;
+  transition: opacity 0.2s ease;
+
+  &:hover {
+    opacity: 1;
+    cursor: row-resize;
+  }
+}
+
+.fc-event-resizing {
+  opacity: 0.5;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+  transition: all 0.2s ease;
+}
+
+.fc-event-resizer-handle {
+  background-color: rgba(255, 255, 255, 0.5);
+  border: 2px solid #4c4c4c;
+  border-radius: 4px;
+  
+  &:hover {
+    background-color: rgba(255, 255, 255, 0.8);
+  }
+}
