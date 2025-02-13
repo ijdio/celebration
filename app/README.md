@@ -4,7 +4,7 @@
 A modern, responsive Angular application for event scheduling and management.
 
 ## Technologies Used
-- Angular 17
+- Angular 19
 - TypeScript
 - RxJS
 - Angular Material
