@@ -38,7 +38,7 @@ Celebration is a robust event scheduling application that allows users to create
   - Server-side storage with SQLite
   - Events persist across browser sessions
 
-## 🛠 Technologies & Rationale
+## Technologies & Rationale
 
 ### Backend (API)
 - **Python (FastAPI)**
@@ -81,7 +81,7 @@ Celebration is a robust event scheduling application that allows users to create
   - Orchestrates multi-container applications
   - Simplifies service configuration and networking
 
-## 🔧 Local Development
+## Local Development
 
 ### Prerequisites
 - Docker
