@@ -4,6 +4,7 @@ from fastapi import HTTPException
 from sqlalchemy.orm import Session
 from sqlalchemy import and_, or_, func
 import logging
+from sqlalchemy.types import String, Interval, Time
 
 from app.models.event import Event
 from app.schemas.event import EventCreate, EventResponse
@@ -206,6 +207,66 @@ class EventService:
         self.db.delete(db_event)
         self.db.commit()
         return True
+
+    def get_current_events(self, current_time: datetime) -> List[Event]:
+        """
+        Retrieve events happening at the current time.
+        
+        Args:
+            current_time: UTC datetime object
+            
+        Returns:
+            List of events currently in progress
+        """
+        try:
+            # Ensure current_time is UTC and naive (no timezone info)
+            if current_time.tzinfo:
+                current_time = current_time.replace(tzinfo=None)
+            
+            # Get current day code
+            current_day_code = current_time.strftime('%a')[:2].upper()
+            logger.debug(f"Searching for current events at {current_time} (Day: {current_day_code})")
+            
+            # Build the query using SQLAlchemy expressions
+            non_recurring = and_(
+                ~Event.is_recurring,
+                Event.start_time <= current_time,
+                func.datetime(
+                    Event.start_time, 
+                    '+' + func.cast(Event.duration, String) + ' minutes'
+                ) >= current_time
+            )
+            
+            # For recurring events, compare time components
+            current_time_str = current_time.strftime('%H:%M:%S')
+            
+            recurring = and_(
+                Event.is_recurring,
+                Event.recurring_days.like(f'%{current_day_code}%'),
+                func.time(Event.start_time) <= current_time_str,
+                func.time(
+                    func.datetime(
+                        Event.start_time,
+                        '+' + func.cast(Event.duration, String) + ' minutes'
+                    )
+                ) >= current_time_str
+            )
+            
+            # Combine queries
+            query = self.db.query(Event).filter(or_(non_recurring, recurring))
+            
+            # Execute query
+            events = query.all()
+            logger.info(f"Found {len(events)} current events")
+            
+            return events
+            
+        except Exception as e:
+            logger.error(f"Error retrieving current events: {str(e)}", exc_info=True)
+            raise HTTPException(
+                status_code=500,
+                detail=f"Error retrieving current events: {str(e)}"
+            )
 
     def _get_conflict_details(self, event: EventCreate, exclude_id: Optional[int] = None) -> Optional[str]:
         """

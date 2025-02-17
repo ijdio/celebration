@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import List, Optional
 from fastapi import APIRouter, Depends, Query, HTTPException
 from sqlalchemy.orm import Session
@@ -132,14 +132,71 @@ def get_events(
         })
         raise HTTPException(status_code=500, detail=str(e))
 
+@router.get("/current", response_model=EventList)
+def get_current_events(
+    db: Session = Depends(get_db)
+):
+    """
+    Get all events happening at the current time.
+    
+    Returns events that are:
+    1. Non-recurring events currently in progress
+    2. Recurring events scheduled for today that are currently in progress
+    
+    All times are handled in UTC.
+    """
+    try:
+        # Get current time in UTC
+        current_time = datetime.now(timezone.utc)
+        
+        # Log request details
+        log_request_details("current events retrieval", {
+            "current_time": current_time.isoformat(),
+            "day_of_week": current_time.strftime('%A'),
+            "timestamp": datetime.now(timezone.utc).isoformat()
+        })
+        
+        # Create event service and fetch events
+        event_service = EventService(db)
+        events = event_service.get_current_events(current_time)
+        
+        # Log found events
+        log_request_details("current events retrieval success", {
+            "total_events": len(events),
+            "events": [
+                {
+                    "id": event.id, 
+                    "name": event.name, 
+                    "start_time": event.start_time.isoformat() if event.start_time else None,
+                    "duration": event.duration,
+                    "is_recurring": event.is_recurring,
+                    "recurring_days": event.recurring_days.split(',') if event.recurring_days else []
+                } for event in events
+            ],
+            "timestamp": datetime.now(timezone.utc).isoformat()
+        })
+        
+        # Convert to response model
+        event_responses = [EventResponse.from_orm(event) for event in events]
+        
+        return EventList(events=event_responses)
+    
+    except Exception as e:
+        # Log error details
+        log_request_details("current events retrieval error", {
+            "error": str(e),
+            "timestamp": datetime.now(timezone.utc).isoformat()
+        })
+        raise HTTPException(
+            status_code=500, 
+            detail=f"Error retrieving current events: {str(e)}"
+        )
+
 @router.get("/{event_id}", response_model=EventResponse)
 def get_event(
     event_id: int,
     db: Session = Depends(get_db)
 ) -> EventResponse:
-    """
-    Get a specific event by ID.
-    """
     log_request_details("event retrieval by id", {
         "event_id": event_id,
         "timestamp": datetime.now().isoformat()
